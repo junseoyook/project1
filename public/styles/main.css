@@ -1,0 +1,81 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f2f5;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 20px 0;
+  color: #1a1a1a;
+  font-size: 24px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+button {
+  flex: 1;
+  color: white;
+  border: none;
+  padding: 15px 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.open-btn {
+  background: #2196f3;
+}
+
+.open-btn:hover {
+  background: #1976d2;
+}
+
+.close-btn {
+  background: #f44336;
+}
+
+.close-btn:hover {
+  background: #d32f2f;
+}
+
+button:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+
+#message {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.success { 
+  background: #e8f5e9; 
+  color: #2e7d32; 
+}
+
+.error { 
+  background: #ffebee; 
+  color: #c62828; 
+} 
