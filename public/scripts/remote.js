@@ -1,16 +1,20 @@
 const API_URL = 'https://project1-production-f338.up.railway.app';
 const DEVICE_ID = 'ESP32_001';
+const CONTROL_KEY = 'your-control-key';  // 실제 운영시에는 안전한 방법으로 관리 필요
 const ledIndicator = document.getElementById('ledIndicator');
 
 async function sendCommand(command) {
     try {
         ledIndicator.classList.add('active');
-        const response = await fetch(`${API_URL}/api/device/command/${DEVICE_ID}`, {
+        const response = await fetch(`${API_URL}/api/control/${DEVICE_ID}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ command })
+            body: JSON.stringify({ 
+                command: command,
+                key: CONTROL_KEY
+            })
         });
 
         if (response.ok) {
@@ -21,7 +25,8 @@ async function sendCommand(command) {
                 button.style.transform = 'scale(1)';
             }, 200);
         } else {
-            showConnectionStatus('오류 발생');
+            const error = await response.json();
+            showConnectionStatus(error.error || '오류 발생');
             ledIndicator.classList.remove('active');
         }
     } catch (error) {
