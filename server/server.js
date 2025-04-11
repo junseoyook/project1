@@ -77,6 +77,16 @@ app.post('/api/control/:deviceId', (req, res) => {
     return res.status(404).json({ error: '디바이스를 찾을 수 없음' });
   }
   
+  // 상태 확인 요청 처리
+  if (command === 'status') {
+    return res.json({ 
+      success: true,
+      status: 'connected',
+      lastCommand: device.command,
+      lastUpdate: device.lastUpdate
+    });
+  }
+  
   // 여기에 실제 인증 로직 추가 필요
   if (key !== 'your-control-key') {
     return res.status(401).json({ error: '잘못된 제어 키' });
@@ -89,7 +99,10 @@ app.post('/api/control/:deviceId', (req, res) => {
   device.command = command;
   device.lastUpdate = Date.now();
   
-  res.json({ success: true });
+  res.json({ 
+    success: true,
+    message: `${command === 'open' ? '열기' : '닫기'} 명령이 전송되었습니다`
+  });
 });
 
 // API 라우트
