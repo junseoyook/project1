@@ -32,16 +32,23 @@ async function sendCommand(command) {
             setTimeout(() => {
                 button.style.transform = 'scale(1)';
             }, 200);
+            
+            // LED 상태 업데이트
+            setTimeout(() => {
+                if (isConnected) {
+                    ledIndicator.style.backgroundColor = '#00ff00';
+                    ledIndicator.style.boxShadow = '0 0 5px #00ff00';
+                }
+                ledIndicator.classList.remove('active');
+            }, 1000);
         } else {
             throw new Error(data.error || '오류가 발생했습니다');
         }
     } catch (error) {
         showConnectionStatus(error.message);
         ledIndicator.classList.remove('active');
-    } finally {
-        setTimeout(() => {
-            ledIndicator.classList.remove('active');
-        }, 1000);
+        // 연결 상태 재확인
+        checkConnection();
     }
 }
 
@@ -75,6 +82,7 @@ async function checkConnection() {
             document.querySelectorAll('.remote-button').forEach(btn => {
                 btn.disabled = false;
             });
+            showConnectionStatus('연결됨');
         } else {
             throw new Error('서버 연결 실패');
         }
@@ -85,6 +93,7 @@ async function checkConnection() {
         document.querySelectorAll('.remote-button').forEach(btn => {
             btn.disabled = true;
         });
+        showConnectionStatus('서버 연결 실패');
         setTimeout(checkConnection, 5000); // 5초 후 재시도
     }
 }
