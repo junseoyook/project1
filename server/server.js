@@ -105,10 +105,6 @@ app.post('/api/control/:deviceId', (req, res) => {
   });
 });
 
-// API 라우트
-const apiRouter = require('./routes/api');
-app.use('/api', apiRouter);
-
 // 관리자 페이지
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
