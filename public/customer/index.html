@@ -22,18 +22,11 @@
         }
 
         .container {
-            display: flex;
-            gap: 20px;
-            max-width: 800px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .remote-card {
             background: white;
             border-radius: 24px;
             padding: 30px;
-            width: 280px;
+            width: 100%;
+            max-width: 320px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
@@ -41,19 +34,10 @@
             position: relative;
         }
 
-        .dark-mode {
-            background: #1c1c1e;
-            color: white;
-        }
-
         .location {
             font-size: 14px;
             color: #666;
             margin-bottom: 10px;
-        }
-
-        .dark-mode .location {
-            color: #999;
         }
 
         .status-icon {
@@ -65,6 +49,14 @@
             font-size: 32px;
             font-weight: 600;
             margin-bottom: 30px;
+            color: #1c1c1e;
+        }
+
+        .button-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .remote-button {
@@ -72,17 +64,21 @@
             padding: 16px;
             border: none;
             border-radius: 16px;
-            background: #f5f5f7;
-            color: #1c1c1e;
             font-size: 16px;
             font-weight: 600;
-            margin: 8px 0;
             cursor: pointer;
             transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .dark-mode .remote-button {
-            background: #2c2c2e;
+        .remote-button.open {
+            background: #007AFF;
+            color: white;
+        }
+
+        .remote-button.close {
+            background: #FF3B30;
             color: white;
         }
 
@@ -93,11 +89,10 @@
 
         .remote-button:not(:disabled):hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        .dark-mode .remote-button:not(:disabled):hover {
-            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+        .remote-button:not(:disabled):active {
+            transform: scale(0.98);
         }
 
         #ledIndicator {
@@ -108,7 +103,18 @@
             top: 20px;
             right: 20px;
             background-color: #ff0000;
+            box-shadow: 0 0 5px #ff0000;
             transition: all 0.3s ease;
+        }
+
+        #ledIndicator.active {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         #connectionStatus {
@@ -129,38 +135,27 @@
             opacity: 1;
         }
 
-        @media (max-width: 600px) {
-            .container {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .remote-card {
-                width: 100%;
-                max-width: 320px;
-            }
+        .button-icon {
+            font-size: 20px;
+            margin-right: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="remote-card">
-            <div class="location">스마트 주차장</div>
-            <div class="status-icon">🚗</div>
-            <div class="status-text">입차</div>
-            <button class="remote-button" data-command="open">OPEN</button>
-            <div id="ledIndicator"></div>
+        <div class="location">스마트 주차장</div>
+        <div class="status-icon">🚗</div>
+        <div class="status-text">리모컨</div>
+        <div class="button-group">
+            <button class="remote-button open" data-command="open">
+                <span class="button-icon">↑</span>OPEN
+            </button>
+            <button class="remote-button close" data-command="close">
+                <span class="button-icon">↓</span>CLOSE
+            </button>
         </div>
-        
-        <div class="remote-card dark-mode">
-            <div class="location">스마트 주차장</div>
-            <div class="status-icon">🚘</div>
-            <div class="status-text">출차</div>
-            <button class="remote-button" data-command="close">CLOSE</button>
-            <div id="ledIndicator"></div>
-        </div>
+        <div id="ledIndicator"></div>
     </div>
-    
     <div id="connectionStatus"></div>
     <script src="../scripts/remote.js"></script>
 </body>
