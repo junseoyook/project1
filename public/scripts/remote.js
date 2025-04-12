@@ -4,7 +4,7 @@ const CONTROL_KEY = 'your-control-key';  // 실제 운영시에는 안전한 방
 const ledIndicator = document.getElementById('ledIndicator');
 let isConnected = false;
 
-async function sendCommand(command) {
+async function sendCommand(command, buttonElement) {
     if (!isConnected) {
         showConnectionStatus('서버에 연결중...');
         return;
@@ -27,11 +27,13 @@ async function sendCommand(command) {
 
         if (response.ok && data.success) {
             showConnectionStatus(data.message || '명령 전송됨');
-            const button = event.currentTarget;
-            button.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-            }, 200);
+            // 버튼 애니메이션 적용
+            if (buttonElement) {
+                buttonElement.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    buttonElement.style.transform = 'scale(1)';
+                }, 200);
+            }
             
             // LED 상태 업데이트
             setTimeout(() => {
@@ -103,6 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 버튼 초기 비활성화
     document.querySelectorAll('.remote-button').forEach(btn => {
         btn.disabled = true;
+        
+        // 버튼 클릭 이벤트 핸들러 추가
+        btn.addEventListener('click', function() {
+            const command = this.dataset.command;  // data-command 속성에서 명령어 가져오기
+            sendCommand(command, this);  // 버튼 요소 전달
+        });
     });
     
     // 연결 확인 시작
