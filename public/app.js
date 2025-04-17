@@ -1,31 +1,35 @@
-// 페이지 전환
-document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const page = e.target.dataset.page;
-        
-        // 활성화된 페이지 변경
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(page).classList.add('active');
-        
-        // 네비게이션 링크 활성화 상태 변경
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        e.target.classList.add('active');
-        
-        // 페이지별 데이터 로드
-        switch(page) {
-            case 'dashboard':
-                loadDashboard();
-                break;
-            case 'reservations':
-                loadReservations();
-                break;
-            case 'logs':
-                loadLogs();
-                break;
-        }
+// 페이지 전환 기능
+document.addEventListener('DOMContentLoaded', function() {
+    // 모든 네비게이션 링크에 이벤트 리스너 추가
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pageId = this.getAttribute('data-page');
+            showPage(pageId);
+            
+            // 활성 링크 스타일 변경
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+        });
     });
 });
+
+// 페이지 표시/숨김 처리
+function showPage(pageId) {
+    // 모든 페이지 숨기기
+    document.querySelectorAll('.page').forEach(page => {
+        page.style.display = 'none';
+    });
+    
+    // 선택된 페이지만 표시
+    const selectedPage = document.getElementById(pageId);
+    if (selectedPage) {
+        selectedPage.style.display = 'block';
+    }
+}
+
+// 초기 페이지 설정 (대시보드)
+showPage('dashboard');
 
 // 대시보드 데이터 로드
 async function loadDashboard() {
