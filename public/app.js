@@ -1,4 +1,4 @@
-// 페이지 전환 기능
+// 페이지 전환 및 초기화
 document.addEventListener('DOMContentLoaded', function() {
     // 모든 네비게이션 링크에 이벤트 리스너 추가
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
         });
     });
+
+    // 초기 페이지 설정 (대시보드)
+    showPage('dashboard');
+    
+    // 초기 데이터 로드
+    loadDashboard();
 });
 
 // 페이지 표시/숨김 처리
@@ -27,9 +33,6 @@ function showPage(pageId) {
         selectedPage.style.display = 'block';
     }
 }
-
-// 초기 페이지 설정 (대시보드)
-showPage('dashboard');
 
 // 대시보드 데이터 로드
 async function loadDashboard() {
@@ -181,7 +184,4 @@ document.getElementById('saveReservation').addEventListener('click', async () =>
         console.error('예약 저장 실패:', error);
         alert('예약 저장에 실패했습니다.');
     }
-});
-
-// 초기 데이터 로드
-loadDashboard(); 
+}); 
