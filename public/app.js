@@ -1,38 +1,109 @@
 // 페이지 전환 및 초기화
 document.addEventListener('DOMContentLoaded', function() {
+    initializePageSwitching();
+});
+
+function initializePageSwitching() {
     // 모든 네비게이션 링크에 이벤트 리스너 추가
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            const pageId = this.getAttribute('data-page');
-            showPage(pageId);
             
-            // 활성 링크 스타일 변경
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            // 현재 활성화된 링크의 active 클래스 제거
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // 클릭된 링크에 active 클래스 추가
             this.classList.add('active');
+            
+            // 페이지 전환
+            const targetPage = this.getAttribute('data-page');
+            switchPage(targetPage);
         });
     });
-
-    // 초기 페이지 설정 (대시보드)
-    showPage('dashboard');
     
-    // 초기 데이터 로드
-    loadDashboard();
-});
+    // 초기 페이지 설정
+    document.querySelector('.nav-link[data-page="dashboard"]').classList.add('active');
+    switchPage('dashboard');
+}
 
-// 페이지 표시/숨김 처리
-function showPage(pageId) {
+function switchPage(pageId) {
     // 모든 페이지 숨기기
     document.querySelectorAll('.page').forEach(page => {
         page.style.display = 'none';
     });
     
-    // 선택된 페이지만 표시
-    const selectedPage = document.getElementById(pageId);
-    if (selectedPage) {
-        selectedPage.style.display = 'block';
+    // 선택된 페이지 보이기
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.style.display = 'block';
     }
 }
+
+// 토큰 관리 기능
+async function generateToken() {
+    try {
+        const response = await fetch('/api/generate-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('토큰 생성 실패');
+        }
+
+        const data = await response.json();
+        const fullUrl = window.location.origin + data.url;
+        
+        // 토큰 URL 표시
+        const tokenDisplay = document.getElementById('tokenDisplay');
+        if (tokenDisplay) {
+            tokenDisplay.value = fullUrl;
+            
+            // 복사 버튼 활성화
+            const copyButton = document.getElementById('copyToken');
+            if (copyButton) {
+                copyButton.disabled = false;
+            }
+        }
+        
+        alert('토큰이 생성되었습니다. URL을 복사하여 고객에게 전달하세요.');
+    } catch (error) {
+        console.error('토큰 생성 오류:', error);
+        alert('토큰 생성에 실패했습니다.');
+    }
+}
+
+// 토큰 URL 복사 기능
+function copyTokenUrl() {
+    const tokenDisplay = document.getElementById('tokenDisplay');
+    if (!tokenDisplay) return;
+    
+    tokenDisplay.select();
+    tokenDisplay.setSelectionRange(0, 99999); // 모바일 지원
+    
+    try {
+        navigator.clipboard.writeText(tokenDisplay.value)
+            .then(() => {
+                alert('URL이 클립보드에 복사되었습니다.');
+            })
+            .catch(err => {
+                console.error('클립보드 복사 실패:', err);
+                alert('URL 복사에 실패했습니다. 수동으로 복사해주세요.');
+            });
+    } catch (err) {
+        // 구형 브라우저 지원
+        document.execCommand('copy');
+        alert('URL이 클립보드에 복사되었습니다.');
+    }
+}
+
+// 전역 스코프에 함수 노출
+window.generateToken = generateToken;
+window.copyTokenUrl = copyTokenUrl;
 
 // 대시보드 데이터 로드
 async function loadDashboard() {
