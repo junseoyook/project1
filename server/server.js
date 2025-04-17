@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const AccessToken = require('./models/AccessToken');
+const crypto = require('crypto');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -110,9 +112,62 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// 고객용 리모컨 페이지
-app.get('/customer', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'customer.html'));
+// 토큰 생성 엔드포인트
+app.post('/api/generate-token', async (req, res) => {
+    try {
+        const uniqueId = crypto.randomBytes(16).toString('hex');
+        const token = crypto.randomBytes(32).toString('hex');
+        
+        const accessToken = new AccessToken({
+            uniqueId,
+            token
+        });
+        
+        await accessToken.save();
+        
+        res.json({
+            url: `/customer/${uniqueId}/${token}`
+        });
+    } catch (error) {
+        console.error('토큰 생성 오류:', error);
+        res.status(500).json({ error: '토큰 생성 실패' });
+    }
+});
+
+// 토큰 검증 미들웨어
+const validateToken = async (req, res, next) => {
+    const { uniqueId, token } = req.params;
+    
+    try {
+        const accessToken = await AccessToken.findOne({ uniqueId });
+        
+        if (!accessToken) {
+            return res.status(404).send('잘못된 접근입니다.');
+        }
+        
+        if (accessToken.token !== token) {
+            return res.status(403).send('잘못된 토큰입니다.');
+        }
+        
+        if (accessToken.usageCount >= 10) {
+            return res.status(403).send('사용 횟수를 초과했습니다.');
+        }
+        
+        // 사용 횟수 증가 및 마지막 사용 시간 업데이트
+        accessToken.usageCount += 1;
+        accessToken.lastUsed = new Date();
+        await accessToken.save();
+        
+        next();
+    } catch (error) {
+        console.error('토큰 검증 오류:', error);
+        res.status(500).send('서버 오류');
+    }
+};
+
+// 토큰 기반 고객 페이지 라우트
+app.get('/customer/:uniqueId/:token', validateToken, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'customer', 'index.html'));
 });
 
 // 서버 시작

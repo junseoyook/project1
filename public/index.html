@@ -33,6 +33,11 @@
                                 <i class="bi bi-calendar-month"></i> 월별 현황
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="token">
+                                <i class="bi bi-key"></i> 토큰 관리
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -187,6 +192,28 @@
                                 <div class="card-body">
                                     <h5 class="card-title">일별 출차 현황</h5>
                                     <canvas id="monthlyExitChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 토큰 관리 페이지 -->
+                <div id="token" class="page" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">토큰 관리</h1>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">고객용 토큰 생성</h5>
+                            <p class="card-text">토큰을 생성하여 고객에게 전달하면, 해당 토큰으로만 원격 제어 페이지에 접근할 수 있습니다.</p>
+                            <button class="btn btn-primary" onclick="generateToken()">토큰 생성</button>
+                            <div class="mt-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="tokenDisplay" readonly>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="copyToken" onclick="copyTokenUrl()" disabled>복사</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
