@@ -180,7 +180,12 @@ const validateToken = async (req, res, next) => {
 
 // 토큰 기반 고객 페이지 라우트
 app.get('/customer/:uniqueId/:token', validateToken, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'customer', 'index.html'));
+    try {
+        res.sendFile(path.join(__dirname, '..', 'public', 'customer.html'));
+    } catch (error) {
+        console.error('고객 페이지 로드 오류:', error);
+        res.status(500).send('페이지를 불러올 수 없습니다.');
+    }
 });
 
 // 서버 시작
