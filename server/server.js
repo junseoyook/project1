@@ -152,92 +152,63 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// 토큰 생성 엔드포인트
-app.post('/api/generate-token', async (req, res) => {
-    try {
-        // MongoDB 연결 상태 확인
-        if (mongoose.connection.readyState !== 1) {
-            throw new Error('MongoDB가 연결되어 있지 않습니다. 현재 상태: ' + mongoose.connection.readyState);
-        }
+// 임시 토큰 저장소 (메모리에 저장)
+const tokens = new Map();
 
-        console.log('토큰 생성 시작');
-        
+// 토큰 생성 엔드포인트
+app.post('/api/generate-token', (req, res) => {
+    try {
         const uniqueId = crypto.randomBytes(16).toString('hex');
         const token = crypto.randomBytes(32).toString('hex');
         
-        console.log('토큰 생성됨:', { uniqueId });
-        
-        const accessToken = new AccessToken({
-            uniqueId,
+        // 토큰 정보 저장
+        tokens.set(uniqueId, {
             token,
-            usageCount: 0,
             createdAt: new Date(),
-            lastUsed: null
+            usageCount: 0
         });
-        
-        console.log('AccessToken 모델 생성됨');
-        
-        const savedToken = await accessToken.save();
-        console.log('토큰 저장 완료:', { uniqueId: savedToken.uniqueId });
         
         res.json({
             url: `${uniqueId}/${token}`
         });
     } catch (error) {
-        console.error('토큰 생성 상세 오류:', {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-        });
-        res.status(500).json({ 
-            error: '토큰 생성 실패',
-            details: error.message
-        });
+        console.error('토큰 생성 오류:', error);
+        res.status(500).json({ error: '토큰 생성 실패' });
     }
 });
 
 // 토큰 검증 미들웨어
-const validateToken = async (req, res, next) => {
+const validateToken = (req, res, next) => {
     const { uniqueId, token } = req.params;
+    const tokenData = tokens.get(uniqueId);
     
-    try {
-        const accessToken = await AccessToken.findOne({ uniqueId });
-        
-        if (!accessToken) {
-            return res.status(404).send('잘못된 접근입니다.');
-        }
-        
-        if (accessToken.token !== token) {
-            return res.status(403).send('잘못된 토큰입니다.');
-        }
-        
-        if (accessToken.usageCount >= 10) {
-            return res.status(403).send('사용 횟수를 초과했습니다.');
-        }
-        
-        // 사용 횟수 증가 및 마지막 사용 시간 업데이트
-        accessToken.usageCount += 1;
-        accessToken.lastUsed = new Date();
-        await accessToken.save();
-        
-        next();
-    } catch (error) {
-        console.error('토큰 검증 오류:', error);
-        res.status(500).send('서버 오류');
+    if (!tokenData || tokenData.token !== token) {
+        return res.status(403).send('잘못된 토큰입니다.');
     }
+    
+    if (tokenData.usageCount >= 10) {
+        return res.status(403).send('사용 횟수를 초과했습니다.');
+    }
+    
+    // 24시간 체크
+    const now = new Date();
+    const diff = now - tokenData.createdAt;
+    if (diff > 24 * 60 * 60 * 1000) {
+        tokens.delete(uniqueId);
+        return res.status(403).send('만료된 토큰입니다.');
+    }
+    
+    // 사용 횟수 증가
+    tokenData.usageCount += 1;
+    next();
 };
 
-// 토큰 기반 고객 페이지 라우트
+// 고객 페이지 라우트
 app.get('/customer/:uniqueId/:token', validateToken, (req, res) => {
-    try {
-        res.sendFile(path.join(__dirname, '..', 'public', 'customer.html'));
-    } catch (error) {
-        console.error('고객 페이지 로드 오류:', error);
-        res.status(500).send('페이지를 불러올 수 없습니다.');
-    }
+    res.sendFile(path.join(__dirname, '..', 'public', 'customer.html'));
 });
 
 // 서버 시작
 app.listen(port, () => {
-  console.log(`서버 실행 중: http://localhost:${port}`);
+    console.log(`서버 실행 중: http://localhost:${port}`);
 }); 
