@@ -102,31 +102,36 @@
             border-radius: 24px;
             transition: all 0.3s ease;
             background: var(--ios-background);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 120px;
         }
 
         .btn-control:disabled {
             opacity: 0.5;
         }
 
-        .btn-control .icon-wrapper {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            text-align: center;
+        .icon-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn-control i {
-            font-size: 32px;
-            margin-bottom: 8px;
+            font-size: 40px;
+            height: 40px;
+            line-height: 40px;
+            display: block;
         }
 
         .btn-control .label {
-            display: block;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
-            margin-top: 4px;
+            margin-top: 8px;
         }
 
         .btn-open {
@@ -199,7 +204,7 @@
                 <div class="control-buttons">
                     <button id="openButton" class="btn btn-control btn-open" onclick="sendCommand('open')" disabled>
                         <div class="icon-wrapper">
-                            <i class="fas fa-lock-open"></i>
+                            <i class="fas fa-unlock"></i>
                             <span class="label">열기</span>
                         </div>
                     </button>
