@@ -55,4 +55,48 @@ async function closeGate() {
   } finally {
     button.disabled = false;
   }
-} 
+}
+
+// 페이지 전환 함수
+function showPage(pageId) {
+    // # 제거
+    pageId = pageId.replace('#', '');
+    
+    // 모든 페이지 숨기기
+    document.querySelectorAll('.page').forEach(page => {
+        page.style.display = 'none';
+    });
+    
+    // 모든 네비게이션 링크의 active 클래스 제거
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // 선택된 페이지 표시
+    const selectedPage = document.getElementById(pageId);
+    if (selectedPage) {
+        selectedPage.style.display = 'block';
+    }
+    
+    // 해당 네비게이션 링크 활성화
+    const activeLink = document.querySelector(`.nav-link[href="#${pageId}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
+}
+
+// 페이지 로드 시 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    // 네비게이션 링크에 이벤트 리스너 추가
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = e.currentTarget.getAttribute('href');
+            showPage(href);
+        });
+    });
+
+    // URL의 해시가 있으면 해당 페이지를, 없으면 대시보드를 표시
+    const hash = window.location.hash || '#dashboard';
+    showPage(hash);
+}); 
