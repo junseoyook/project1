@@ -10,56 +10,34 @@ const crypto = require('crypto');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// MongoDB URI 구성
-function getMongoURI() {
-    const host = process.env.MONGOHOST;
-    const port = process.env.MONGOPORT;
-    const user = process.env.MONGOUSER;
-    const password = process.env.MONGOPASSWORD;
-    
-    if (!host || !user || !password) {
-        throw new Error('필수 MongoDB 환경변수가 설정되지 않았습니다.');
-    }
-    
-    const uri = `mongodb://${user}:${password}@${host}${port ? `:${port}` : ''}`;
-    console.log('MongoDB URI 구성됨 (비밀번호 제외):', uri.replace(password, '****'));
-    return uri;
-}
-
 // MongoDB 연결 설정
 const connectDB = async () => {
     try {
-        const mongoURI = getMongoURI();
+        // Railway가 제공하는 MongoDB URL 사용
+        const mongoURL = process.env.MONGO_URL || 'mongodb://yamabiko.proxy.rlwy.net:port';
+        
         console.log('MongoDB 연결 시도...');
-
-        await mongoose.connect(mongoURI);
+        console.log('연결 주소:', mongoURL.replace(/mongodb:\/\/([^:]+):([^@]+)@/, 'mongodb://****:****@'));
+        
+        await mongoose.connect(mongoURL);
         console.log('MongoDB 연결 성공');
         
-        // 연결 상태 확인
-        const state = mongoose.connection.readyState;
-        console.log('MongoDB 연결 상태:', {
-            0: '연결 끊김',
-            1: '연결됨',
-            2: '연결 중',
-            3: '연결 해제 중',
-            99: '연결 실패'
-        }[state]);
-
-        // 컬렉션 목록 확인
+        // 데이터베이스 정보 출력
+        const dbName = mongoose.connection.db.databaseName;
+        console.log('연결된 데이터베이스:', dbName);
+        
+        // 컬렉션 생성 확인
         const collections = await mongoose.connection.db.listCollections().toArray();
-        console.log('사용 가능한 컬렉션:', collections.map(c => c.name));
+        if (!collections.find(c => c.name === 'accesstokens')) {
+            console.log('accesstokens 컬렉션 생성 중...');
+            await mongoose.connection.db.createCollection('accesstokens');
+            console.log('accesstokens 컬렉션 생성 완료');
+        }
 
     } catch (err) {
         console.error('MongoDB 연결 실패:', err.message);
-        if (err.name === 'MongoServerError') {
-            console.error('MongoDB 서버 오류 상세:', {
-                code: err.code,
-                codeName: err.codeName,
-                message: err.message
-            });
-        }
-        // 연결 실패 시 1분 후 재시도
-        setTimeout(connectDB, 60000);
+        // 연결 실패 시 30초 후 재시도
+        setTimeout(connectDB, 30000);
     }
 };
 
@@ -68,16 +46,16 @@ connectDB();
 
 // MongoDB 연결 이벤트 리스너
 mongoose.connection.on('connected', () => {
-    console.log('MongoDB에 연결되었습니다.');
+    console.log('MongoDB 연결 상태: 활성');
 });
 
 mongoose.connection.on('error', (err) => {
-    console.error('MongoDB 연결 오류:', err);
+    console.error('MongoDB 오류 발생:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB 연결이 끊어졌습니다. 재연결 시도...');
-    setTimeout(connectDB, 60000);
+    console.log('MongoDB 연결 끊김, 재연결 시도...');
+    setTimeout(connectDB, 30000);
 });
 
 // 미들웨어 설정
