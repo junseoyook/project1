@@ -193,14 +193,8 @@ app.get('/', (req, res) => {
 const tokens = new Map();
 
 // 토큰 생성 엔드포인트
-app.post('/api/generate-token', async (req, res) => {
+app.post('/api/generate-token', (req, res) => {
     try {
-        const { phoneNumber } = req.body;  // 전화번호 받기
-        
-        if (!phoneNumber) {
-            return res.status(400).json({ error: '전화번호가 필요합니다.' });
-        }
-
         const uniqueId = crypto.randomBytes(16).toString('hex');
         const token = crypto.randomBytes(32).toString('hex');
         
@@ -208,25 +202,12 @@ app.post('/api/generate-token', async (req, res) => {
         tokens.set(uniqueId, {
             token,
             createdAt: new Date(),
-            usageCount: 0,
-            phoneNumber  // 전화번호 저장
+            usageCount: 0
         });
 
-        // 전체 URL 생성
-        const baseUrl = process.env.BASE_URL || `https://${req.get('host')}`;
-        const tokenUrl = `${baseUrl}/customer/${uniqueId}/${token}`;
-        
-        // SMS 메시지 생성
-        const message = `[주차장 원격제어]\n원격제어 링크가 생성되었습니다.\n${tokenUrl}\n(24시간 동안 유효)`;
-        
-        // SMS 전송
-        const smsSent = await sendSMS(phoneNumber, message);
-        
         res.json({
             success: true,
-            url: `${uniqueId}/${token}`,
-            smsSent,
-            message: smsSent ? 'SMS가 전송되었습니다.' : 'SMS 전송에 실패했습니다.'
+            url: `${uniqueId}/${token}`
         });
     } catch (error) {
         console.error('토큰 생성 오류:', error);
