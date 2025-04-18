@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>원격 제어</title>
+    <title>주차장 원격 제어</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -41,6 +41,19 @@
         .btn-control:disabled {
             opacity: 0.7;
         }
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .status-connected {
+            background-color: #28a745;
+        }
+        .status-disconnected {
+            background-color: #dc3545;
+        }
         .status-message {
             text-align: center;
             padding: 15px;
@@ -61,7 +74,10 @@
     <div class="container">
         <div class="card">
             <div class="card-header">
-                <h2 class="text-center mb-0">원격 제어</h2>
+                <h2 class="text-center mb-0">
+                    <span id="statusLed" class="status-indicator status-disconnected"></span>
+                    주차장 원격 제어
+                </h2>
             </div>
             <div class="card-body">
                 <div id="statusMessage" class="status-message alert alert-info">
@@ -77,8 +93,8 @@
                 </div>
                 <div class="mt-4">
                     <p class="text-muted text-center small">
-                        이 링크는 24시간 동안 유효하며, 최대 10회까지 사용할 수 있습니다.<br>
-                        차량 진입 후에는 반드시 닫기 버튼을 눌러주세요.
+                        * 이 링크는 24시간 동안 유효하며, 최대 10회까지 사용할 수 있습니다.<br>
+                        * 차량 진입 후에는 반드시 닫기 버튼을 눌러주세요.
                     </p>
                 </div>
             </div>
@@ -86,26 +102,39 @@
     </div>
 
     <script>
+        let isConnected = false;
+
         // 연결 상태 확인
         async function checkConnection() {
+            const statusLed = document.getElementById('statusLed');
             const statusMessage = document.getElementById('statusMessage');
             const buttons = document.querySelectorAll('.btn-control');
             
             try {
-                const response = await fetch('/api/device/status/ESP32_001', {
-                    method: 'GET'
+                const response = await fetch('/api/control/ESP32_001', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ command: 'status', key: 'your-control-key' })
                 });
 
-                if (response.ok) {
+                const data = await response.json();
+
+                if (data.success) {
+                    isConnected = true;
+                    statusLed.className = 'status-indicator status-connected';
                     statusMessage.className = 'status-message alert alert-success';
-                    statusMessage.textContent = '연결됨';
+                    statusMessage.textContent = '게이트와 연결되었습니다';
                     buttons.forEach(btn => btn.disabled = false);
                 } else {
                     throw new Error('연결 실패');
                 }
             } catch (error) {
+                isConnected = false;
+                statusLed.className = 'status-indicator status-disconnected';
                 statusMessage.className = 'status-message alert alert-danger';
-                statusMessage.textContent = '연결 실패';
+                statusMessage.textContent = '게이트와 연결할 수 없습니다';
                 buttons.forEach(btn => btn.disabled = true);
                 setTimeout(checkConnection, 5000);
             }
@@ -113,6 +142,11 @@
 
         // 명령 전송
         async function sendCommand(command) {
+            if (!isConnected) {
+                alert('게이트와 연결되어 있지 않습니다.');
+                return;
+            }
+
             const statusMessage = document.getElementById('statusMessage');
             const buttons = document.querySelectorAll('.btn-control');
             
@@ -121,23 +155,25 @@
                 statusMessage.className = 'status-message alert alert-info';
                 statusMessage.textContent = '명령 전송 중...';
 
-                const response = await fetch('/api/device/control/ESP32_001', {
+                const response = await fetch('/api/control/ESP32_001', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ command })
+                    body: JSON.stringify({ command, key: 'your-control-key' })
                 });
 
-                if (response.ok) {
+                const data = await response.json();
+
+                if (data.success) {
                     statusMessage.className = 'status-message alert alert-success';
-                    statusMessage.textContent = command === 'open' ? '열기 명령이 전송되었습니다' : '닫기 명령이 전송되었습니다';
+                    statusMessage.textContent = data.message;
                 } else {
-                    throw new Error('명령 전송 실패');
+                    throw new Error(data.error || '명령 전송 실패');
                 }
             } catch (error) {
                 statusMessage.className = 'status-message alert alert-danger';
-                statusMessage.textContent = '명령 전송에 실패했습니다';
+                statusMessage.textContent = error.message;
             } finally {
                 setTimeout(() => {
                     checkConnection();
