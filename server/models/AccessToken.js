@@ -4,7 +4,8 @@ const accessTokenSchema = new mongoose.Schema({
     uniqueId: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        index: true
     },
     token: {
         type: String,
@@ -13,6 +14,7 @@ const accessTokenSchema = new mongoose.Schema({
     usageCount: {
         type: Number,
         default: 0,
+        min: 0,
         max: 10
     },
     createdAt: {
@@ -21,8 +23,14 @@ const accessTokenSchema = new mongoose.Schema({
         expires: 86400  // 24시간 후 자동 삭제
     },
     lastUsed: {
-        type: Date
+        type: Date,
+        default: null
     }
 });
 
-module.exports = mongoose.model('AccessToken', accessTokenSchema); 
+// 인덱스 생성
+accessTokenSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+
+const AccessToken = mongoose.model('AccessToken', accessTokenSchema);
+
+module.exports = AccessToken; 

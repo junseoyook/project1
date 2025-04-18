@@ -11,12 +11,18 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // MongoDB 연결
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/parking-system', {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('MongoDB 연결 성공'))
-.catch(err => console.error('MongoDB 연결 실패:', err));
+.then(() => {
+  console.log('MongoDB 연결 성공');
+  console.log('MongoDB URI:', process.env.MONGODB_URI);
+})
+.catch(err => {
+  console.error('MongoDB 연결 실패:', err);
+  process.exit(1);  // MongoDB 연결 실패시 서버 종료
+});
 
 // 미들웨어 설정
 app.use(cors());
@@ -117,6 +123,11 @@ app.post('/api/generate-token', async (req, res) => {
     try {
         console.log('토큰 생성 시작');
         
+        // MongoDB 연결 상태 확인
+        if (mongoose.connection.readyState !== 1) {
+            throw new Error('MongoDB 연결이 끊어졌습니다');
+        }
+        
         const uniqueId = crypto.randomBytes(16).toString('hex');
         const token = crypto.randomBytes(32).toString('hex');
         
@@ -130,7 +141,7 @@ app.post('/api/generate-token', async (req, res) => {
             lastUsed: null
         });
         
-        console.log('AccessToken 모델 생성됨');
+        console.log('AccessToken 모델 생성됨:', accessToken);
         
         const savedToken = await accessToken.save();
         console.log('토큰 저장 완료:', savedToken);
@@ -142,7 +153,8 @@ app.post('/api/generate-token', async (req, res) => {
         console.error('토큰 생성 상세 오류:', error);
         res.status(500).json({ 
             error: '토큰 생성 실패',
-            details: error.message 
+            details: error.message,
+            stack: error.stack
         });
     }
 });
