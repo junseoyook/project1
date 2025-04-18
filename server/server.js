@@ -115,22 +115,35 @@ app.get('/', (req, res) => {
 // 토큰 생성 엔드포인트
 app.post('/api/generate-token', async (req, res) => {
     try {
+        console.log('토큰 생성 시작');
+        
         const uniqueId = crypto.randomBytes(16).toString('hex');
         const token = crypto.randomBytes(32).toString('hex');
         
+        console.log('토큰 생성됨:', { uniqueId, token });
+        
         const accessToken = new AccessToken({
             uniqueId,
-            token
+            token,
+            usageCount: 0,
+            createdAt: new Date(),
+            lastUsed: null
         });
         
-        await accessToken.save();
+        console.log('AccessToken 모델 생성됨');
+        
+        const savedToken = await accessToken.save();
+        console.log('토큰 저장 완료:', savedToken);
         
         res.json({
-            url: `/customer/${uniqueId}/${token}`
+            url: `${uniqueId}/${token}`
         });
     } catch (error) {
-        console.error('토큰 생성 오류:', error);
-        res.status(500).json({ error: '토큰 생성 실패' });
+        console.error('토큰 생성 상세 오류:', error);
+        res.status(500).json({ 
+            error: '토큰 생성 실패',
+            details: error.message 
+        });
     }
 });
 
