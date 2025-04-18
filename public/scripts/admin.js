@@ -1,10 +1,23 @@
 // API 기본 URL 설정
 const API_BASE_URL = window.location.origin;
 
+// DOM이 로드되면 이벤트 리스너 등록
+document.addEventListener('DOMContentLoaded', () => {
+    const generateTokenBtn = document.querySelector('#token button.btn-primary');
+    if (generateTokenBtn) {
+        generateTokenBtn.addEventListener('click', generateToken);
+    }
+});
+
 // 토큰 생성 함수
 async function generateToken() {
     const button = document.querySelector('#token button.btn-primary');
     const tokenDisplay = document.getElementById('tokenDisplay');
+    
+    if (!button || !tokenDisplay) {
+        console.error('필요한 DOM 요소를 찾을 수 없습니다');
+        return;
+    }
     
     try {
         // 버튼 비활성화 및 로딩 상태 표시
@@ -15,14 +28,16 @@ async function generateToken() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({}) // 빈 객체라도 보내기
         });
 
+        const data = await response.json();
+        
         if (!response.ok) {
-            throw new Error('토큰 생성에 실패했습니다');
+            throw new Error(data.error || '토큰 생성에 실패했습니다');
         }
 
-        const data = await response.json();
         const fullUrl = `${API_BASE_URL}/customer/${data.url}`;
         
         // 토큰 URL 표시
@@ -30,9 +45,11 @@ async function generateToken() {
         
         // 복사 버튼 활성화
         const copyButton = document.getElementById('copyToken');
-        copyButton.disabled = false;
+        if (copyButton) {
+            copyButton.disabled = false;
+        }
         
-        // 성공 메시지와 함께 QR 코드 생성 옵션 표시
+        // 성공 메시지 표시
         showSuccessMessage(`
             토큰이 생성되었습니다.<br>
             1. "복사" 버튼을 눌러 URL을 복사하고 고객에게 전달하세요.<br>
@@ -41,7 +58,7 @@ async function generateToken() {
         `);
     } catch (error) {
         console.error('토큰 생성 오류:', error);
-        showErrorMessage('토큰 생성에 실패했습니다. 다시 시도해주세요.');
+        showErrorMessage(error.message || '토큰 생성에 실패했습니다. 다시 시도해주세요.');
     } finally {
         // 버튼 상태 복원
         button.disabled = false;
