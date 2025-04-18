@@ -10,18 +10,36 @@ const crypto = require('crypto');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// MongoDB 연결
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('MongoDB 연결 성공');
-  console.log('MongoDB URI:', process.env.MONGODB_URI);
-})
-.catch(err => {
-  console.error('MongoDB 연결 실패:', err);
-  process.exit(1);  // MongoDB 연결 실패시 서버 종료
+// MongoDB 연결 설정
+const connectDB = async () => {
+  try {
+    const mongoURI = process.env.MONGODB_URI;
+    console.log('MongoDB 연결 시도...');
+    
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI 환경변수가 설정되지 않았습니다.');
+    }
+
+    await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+
+    console.log('MongoDB 연결 성공');
+  } catch (err) {
+    console.error('MongoDB 연결 실패:', err.message);
+    // 연결 실패 시 1분 후 재시도
+    setTimeout(connectDB, 60000);
+  }
+};
+
+// MongoDB 연결 시도
+connectDB();
+
+// MongoDB 연결 이벤트 리스너
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB 연결이 끊어졌습니다. 재연결 시도...');
+  setTimeout(connectDB, 60000);
 });
 
 // 미들웨어 설정
