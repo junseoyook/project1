@@ -255,4 +255,34 @@ document.getElementById('saveReservation').addEventListener('click', async () =>
         console.error('예약 저장 실패:', error);
         alert('예약 저장에 실패했습니다.');
     }
+});
+
+// 페이지 전환 함수
+function showPage(pageId) {
+    // 모든 페이지 숨기기
+    document.querySelectorAll('.page').forEach(page => {
+        page.style.display = 'none';
+    });
+    
+    // 모든 네비게이션 링크의 active 클래스 제거
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // 선택된 페이지 표시
+    const selectedPage = document.getElementById(pageId);
+    if (selectedPage) {
+        selectedPage.style.display = 'block';
+    }
+    
+    // 해당 네비게이션 링크 활성화
+    const activeLink = document.querySelector(`.nav-link[href="#${pageId}"]`);
+    if (activeLink) {
+        activeLink.classList.add('active');
+    }
+}
+
+// 초기 페이지 설정
+document.addEventListener('DOMContentLoaded', () => {
+    showPage('dashboard');
 }); 
