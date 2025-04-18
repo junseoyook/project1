@@ -11,15 +11,26 @@ const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// 환경 변수 체크
+const checkRequiredEnvVars = () => {
+    const required = ['MONGO_URL', 'SMS_API_KEY', 'SMS_SECRET_KEY', 'SMS_SENDER_NUMBER'];
+    const missing = required.filter(key => !process.env[key]);
+    
+    if (missing.length > 0) {
+        console.error('필수 환경 변수가 설정되지 않았습니다:', missing.join(', '));
+        return false;
+    }
+    return true;
+};
+
 // MongoDB 연결 설정
 const connectDB = async () => {
     try {
-        const mongoURL = process.env.MONGO_URL;
-        
-        if (!mongoURL) {
-            throw new Error('MONGO_URL 환경 변수가 설정되지 않았습니다.');
+        if (!checkRequiredEnvVars()) {
+            throw new Error('필수 환경 변수 누락');
         }
-        
+
+        const mongoURL = process.env.MONGO_URL;
         console.log('MongoDB 연결 시도...');
         
         await mongoose.connect(mongoURL, {
@@ -32,7 +43,7 @@ const connectDB = async () => {
         
     } catch (err) {
         console.error('MongoDB 연결 실패:', err.message);
-        process.exit(1); // 연결 실패 시 프로세스 종료
+        throw err; // 에러를 상위로 전파
     }
 };
 
@@ -257,10 +268,19 @@ app.get('/customer/:uniqueId/:token', validateToken, (req, res) => {
 // 서버 시작
 const startServer = async () => {
     try {
-        await connectDB(); // MongoDB 연결 먼저 시도
+        await connectDB();
+        
+        // SMS 서비스 설정 확인
+        console.log('SMS 서비스 설정 확인...');
+        if (SMS_API_KEY && SMS_SECRET_KEY && SMS_SENDER_NUMBER) {
+            console.log('SMS 서비스 설정 완료');
+        } else {
+            console.warn('SMS 서비스가 비활성화됨 - 환경 변수 누락');
+        }
         
         app.listen(port, () => {
-            console.log(`서버 실행 중: http://localhost:${port}`);
+            console.log(`서버 실행 중: 포트 ${port}`);
+            console.log('환경:', process.env.NODE_ENV || 'development');
         });
     } catch (error) {
         console.error('서버 시작 실패:', error);
@@ -268,4 +288,6 @@ const startServer = async () => {
     }
 };
 
+// 서버 시작
+console.log('서버 시작 중...');
 startServer(); 
