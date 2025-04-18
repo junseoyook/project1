@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const AccessToken = require('./models/AccessToken');
 const crypto = require('crypto');
+const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -57,6 +58,37 @@ mongoose.connection.on('disconnected', () => {
     console.log('MongoDB 연결 끊김, 재연결 시도...');
     setTimeout(connectDB, 30000);
 });
+
+// SMS 설정
+const SMS_API_KEY = process.env.SMS_API_KEY;
+const SMS_SECRET_KEY = process.env.SMS_SECRET_KEY;
+const SMS_SENDER_NUMBER = process.env.SMS_SENDER_NUMBER;
+
+// SMS 전송 함수
+async function sendSMS(phoneNumber, message) {
+    try {
+        const timestamp = Date.now().toString();
+        const response = await axios({
+            method: 'POST',
+            url: 'https://api-sms.cloud.toast.com/sms/v3.0/appKeys/{APP_KEY}/sender/sms',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8',
+                'X-Secret-Key': SMS_SECRET_KEY
+            },
+            data: {
+                body: message,
+                sendNo: SMS_SENDER_NUMBER,
+                recipientList: [{recipientNo: phoneNumber}]
+            }
+        });
+        
+        console.log('SMS 전송 성공:', response.data);
+        return true;
+    } catch (error) {
+        console.error('SMS 전송 실패:', error);
+        return false;
+    }
+}
 
 // 미들웨어 설정
 app.use(cors());
@@ -152,12 +184,18 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// 임시 토큰 저장소 (메모리에 저장)
+// 임시 토큰 저장소
 const tokens = new Map();
 
 // 토큰 생성 엔드포인트
-app.post('/api/generate-token', (req, res) => {
+app.post('/api/generate-token', async (req, res) => {
     try {
+        const { phoneNumber } = req.body;  // 전화번호 받기
+        
+        if (!phoneNumber) {
+            return res.status(400).json({ error: '전화번호가 필요합니다.' });
+        }
+
         const uniqueId = crypto.randomBytes(16).toString('hex');
         const token = crypto.randomBytes(32).toString('hex');
         
@@ -165,11 +203,25 @@ app.post('/api/generate-token', (req, res) => {
         tokens.set(uniqueId, {
             token,
             createdAt: new Date(),
-            usageCount: 0
+            usageCount: 0,
+            phoneNumber  // 전화번호 저장
         });
+
+        // 전체 URL 생성
+        const baseUrl = process.env.BASE_URL || `https://${req.get('host')}`;
+        const tokenUrl = `${baseUrl}/customer/${uniqueId}/${token}`;
+        
+        // SMS 메시지 생성
+        const message = `[주차장 원격제어]\n원격제어 링크가 생성되었습니다.\n${tokenUrl}\n(24시간 동안 유효)`;
+        
+        // SMS 전송
+        const smsSent = await sendSMS(phoneNumber, message);
         
         res.json({
-            url: `${uniqueId}/${token}`
+            success: true,
+            url: `${uniqueId}/${token}`,
+            smsSent,
+            message: smsSent ? 'SMS가 전송되었습니다.' : 'SMS 전송에 실패했습니다.'
         });
     } catch (error) {
         console.error('토큰 생성 오류:', error);
