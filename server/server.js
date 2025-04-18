@@ -10,36 +10,74 @@ const crypto = require('crypto');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// MongoDB URI 구성
+function getMongoURI() {
+    const host = process.env.MONGOHOST;
+    const port = process.env.MONGOPORT;
+    const user = process.env.MONGOUSER;
+    const password = process.env.MONGOPASSWORD;
+    
+    if (!host || !user || !password) {
+        throw new Error('필수 MongoDB 환경변수가 설정되지 않았습니다.');
+    }
+    
+    const uri = `mongodb://${user}:${password}@${host}${port ? `:${port}` : ''}`;
+    console.log('MongoDB URI 구성됨 (비밀번호 제외):', uri.replace(password, '****'));
+    return uri;
+}
+
 // MongoDB 연결 설정
 const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGODB_URI;
-    console.log('MongoDB 연결 시도...');
-    
-    if (!mongoURI) {
-      throw new Error('MONGODB_URI 환경변수가 설정되지 않았습니다.');
+    try {
+        const mongoURI = getMongoURI();
+        console.log('MongoDB 연결 시도...');
+
+        await mongoose.connect(mongoURI);
+        console.log('MongoDB 연결 성공');
+        
+        // 연결 상태 확인
+        const state = mongoose.connection.readyState;
+        console.log('MongoDB 연결 상태:', {
+            0: '연결 끊김',
+            1: '연결됨',
+            2: '연결 중',
+            3: '연결 해제 중',
+            99: '연결 실패'
+        }[state]);
+
+        // 컬렉션 목록 확인
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        console.log('사용 가능한 컬렉션:', collections.map(c => c.name));
+
+    } catch (err) {
+        console.error('MongoDB 연결 실패:', err.message);
+        if (err.name === 'MongoServerError') {
+            console.error('MongoDB 서버 오류 상세:', {
+                code: err.code,
+                codeName: err.codeName,
+                message: err.message
+            });
+        }
+        // 연결 실패 시 1분 후 재시도
+        setTimeout(connectDB, 60000);
     }
-
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-
-    console.log('MongoDB 연결 성공');
-  } catch (err) {
-    console.error('MongoDB 연결 실패:', err.message);
-    // 연결 실패 시 1분 후 재시도
-    setTimeout(connectDB, 60000);
-  }
 };
 
 // MongoDB 연결 시도
 connectDB();
 
 // MongoDB 연결 이벤트 리스너
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB에 연결되었습니다.');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB 연결 오류:', err);
+});
+
 mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB 연결이 끊어졌습니다. 재연결 시도...');
-  setTimeout(connectDB, 60000);
+    console.log('MongoDB 연결이 끊어졌습니다. 재연결 시도...');
+    setTimeout(connectDB, 60000);
 });
 
 // 미들웨어 설정
@@ -139,17 +177,17 @@ app.get('/', (req, res) => {
 // 토큰 생성 엔드포인트
 app.post('/api/generate-token', async (req, res) => {
     try {
-        console.log('토큰 생성 시작');
-        
         // MongoDB 연결 상태 확인
         if (mongoose.connection.readyState !== 1) {
-            throw new Error('MongoDB 연결이 끊어졌습니다');
+            throw new Error('MongoDB가 연결되어 있지 않습니다. 현재 상태: ' + mongoose.connection.readyState);
         }
+
+        console.log('토큰 생성 시작');
         
         const uniqueId = crypto.randomBytes(16).toString('hex');
         const token = crypto.randomBytes(32).toString('hex');
         
-        console.log('토큰 생성됨:', { uniqueId, token });
+        console.log('토큰 생성됨:', { uniqueId });
         
         const accessToken = new AccessToken({
             uniqueId,
@@ -159,20 +197,23 @@ app.post('/api/generate-token', async (req, res) => {
             lastUsed: null
         });
         
-        console.log('AccessToken 모델 생성됨:', accessToken);
+        console.log('AccessToken 모델 생성됨');
         
         const savedToken = await accessToken.save();
-        console.log('토큰 저장 완료:', savedToken);
+        console.log('토큰 저장 완료:', { uniqueId: savedToken.uniqueId });
         
         res.json({
             url: `${uniqueId}/${token}`
         });
     } catch (error) {
-        console.error('토큰 생성 상세 오류:', error);
+        console.error('토큰 생성 상세 오류:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
         res.status(500).json({ 
             error: '토큰 생성 실패',
-            details: error.message,
-            stack: error.stack
+            details: error.message
         });
     }
 });
