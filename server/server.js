@@ -14,31 +14,25 @@ const port = process.env.PORT || 3000;
 // MongoDB 연결 설정
 const connectDB = async () => {
     try {
-        // Railway가 제공하는 MongoDB URL 사용
-        const mongoURL = process.env.MONGO_URL || 'mongodb://yamabiko.proxy.rlwy.net:port';
+        const mongoURL = process.env.MONGO_URL;
+        
+        if (!mongoURL) {
+            throw new Error('MONGO_URL 환경 변수가 설정되지 않았습니다.');
+        }
         
         console.log('MongoDB 연결 시도...');
-        console.log('연결 주소:', mongoURL.replace(/mongodb:\/\/([^:]+):([^@]+)@/, 'mongodb://****:****@'));
         
-        await mongoose.connect(mongoURL);
+        await mongoose.connect(mongoURL, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000
+        });
+        
         console.log('MongoDB 연결 성공');
         
-        // 데이터베이스 정보 출력
-        const dbName = mongoose.connection.db.databaseName;
-        console.log('연결된 데이터베이스:', dbName);
-        
-        // 컬렉션 생성 확인
-        const collections = await mongoose.connection.db.listCollections().toArray();
-        if (!collections.find(c => c.name === 'accesstokens')) {
-            console.log('accesstokens 컬렉션 생성 중...');
-            await mongoose.connection.db.createCollection('accesstokens');
-            console.log('accesstokens 컬렉션 생성 완료');
-        }
-
     } catch (err) {
         console.error('MongoDB 연결 실패:', err.message);
-        // 연결 실패 시 30초 후 재시도
-        setTimeout(connectDB, 30000);
+        process.exit(1); // 연결 실패 시 프로세스 종료
     }
 };
 
@@ -261,6 +255,17 @@ app.get('/customer/:uniqueId/:token', validateToken, (req, res) => {
 });
 
 // 서버 시작
-app.listen(port, () => {
-    console.log(`서버 실행 중: http://localhost:${port}`);
-}); 
+const startServer = async () => {
+    try {
+        await connectDB(); // MongoDB 연결 먼저 시도
+        
+        app.listen(port, () => {
+            console.log(`서버 실행 중: http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error('서버 시작 실패:', error);
+        process.exit(1);
+    }
+};
+
+startServer(); 
