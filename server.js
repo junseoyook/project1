@@ -4,6 +4,16 @@ const cors = require('cors');
 const axios = require('axios');
 const crypto = require('crypto');
 
+// 환경변수 디버깅
+console.log('==== 환경변수 디버깅 시작 ====');
+console.log('process.env:', {
+  SOLAPI_API_KEY: process.env.SOLAPI_API_KEY || '없음',
+  SOLAPI_API_SECRET: process.env.SOLAPI_API_SECRET ? '설정됨' : '없음',
+  SOLAPI_PFID: process.env.SOLAPI_PFID || '없음',
+  BASE_URL: process.env.BASE_URL || '없음',
+  NODE_ENV: process.env.NODE_ENV || '없음'
+});
+
 const app = express();
 app.use(cors());
 app.use(express.json());
