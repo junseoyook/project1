@@ -71,13 +71,21 @@ function generateToken() {
 // Solapi 인증 헤더 생성 함수
 function getAuthHeader() {
   const date = new Date().toISOString();
-  const salt = Math.random().toString(36).substring(2, 15);
+  // salt를 12자 이상으로 생성
+  const salt = Math.random().toString(36).substring(2, 15) + 
+               Math.random().toString(36).substring(2, 15);
   
   try {
     const signature = crypto
       .createHmac('sha256', SOLAPI_API_SECRET)
       .update(date + salt)
       .digest('hex');
+
+    console.log('인증 정보 생성:', {
+      date,
+      salt,
+      signature: signature.substring(0, 10) + '...'  // 보안을 위해 일부만 로깅
+    });
 
     return {
       Authorization: `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
