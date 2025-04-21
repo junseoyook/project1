@@ -71,9 +71,7 @@ function generateToken() {
 // Solapi 인증 헤더 생성 함수
 function getAuthHeader() {
   const date = new Date().toISOString();
-  // salt를 12자 이상으로 생성
-  const salt = Math.random().toString(36).substring(2, 15) + 
-               Math.random().toString(36).substring(2, 15);
+  const salt = crypto.randomBytes(32).toString('hex');
   
   try {
     const signature = crypto
@@ -82,9 +80,10 @@ function getAuthHeader() {
       .digest('hex');
 
     console.log('인증 정보 생성:', {
+      apiKey: SOLAPI_API_KEY,
       date,
-      salt,
-      signature: signature.substring(0, 10) + '...'  // 보안을 위해 일부만 로깅
+      salt: salt.substring(0, 10) + '...',
+      signature: signature.substring(0, 10) + '...'
     });
 
     return {
@@ -153,13 +152,14 @@ async function sendKakaoNotification(phoneNumber, token) {
       message: {
         to: phoneNumber,
         from: SENDER_PHONE,
+        text: `[전주호텔 북 앤 타이프] 주차장 출입 안내`,
         kakaoOptions: {
           pfId: SOLAPI_PFID,
           templateId: 'KA01TP250418063541272b3uS4NHhfLo',
           variables: {
-            "고객명": "고객",
-            "주차URL": token.url,
-            "현관URL": token.url
+            고객명: "고객",
+            주차URL: token.url,
+            현관URL: token.url
           }
         }
       }
@@ -168,18 +168,27 @@ async function sendKakaoNotification(phoneNumber, token) {
     console.log('Solapi 요청 데이터:', JSON.stringify(message, null, 2));
 
     const headers = getAuthHeader();
+    console.log('요청 헤더:', {
+      Authorization: headers.Authorization.substring(0, 50) + '...',
+      'Content-Type': headers['Content-Type']
+    });
+
     const response = await axios.post(
       'https://api.solapi.com/messages/v4/send',
       message,
-      { headers }
+      { 
+        headers,
+        timeout: 10000 // 10초 타임아웃 설정
+      }
     );
 
     console.log('Solapi 응답:', response.data);
     return response.data;
   } catch (error) {
     console.error('알림톡 발송 실패:', {
-      error: error.message,
-      response: error.response?.data
+      message: error.message,
+      response: error.response?.data,
+      config: error.config
     });
     throw error;
   }

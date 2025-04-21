@@ -135,7 +135,7 @@
         }
 
         .btn-control .label {
-            color: #fff;
+                color: #fff;
             font-size: 17px;
             font-weight: 500;
         }
@@ -202,18 +202,18 @@
     <div class="container">
         <div id="statusMessage" class="status-message">
             연결 상태 확인 중...
-        </div>
+                </div>
 
         <div class="remote-buttons">
             <button id="openButton" class="btn-control btn-open" onclick="sendCommand('open')" disabled>
                 <i class="fas fa-unlock"></i>
                 <span class="label">열기</span>
-            </button>
+                    </button>
             <button id="closeButton" class="btn-control btn-close" onclick="sendCommand('close')" disabled>
                 <i class="fas fa-lock"></i>
                 <span class="label">닫기</span>
-            </button>
-        </div>
+                    </button>
+                </div>
 
         <div class="notice">
             <p>
@@ -242,7 +242,7 @@
                 });
 
                 const data = await response.json();
-
+                
                 if (data.success) {
                     isConnected = true;
                     statusLed.className = 'status-indicator status-connected';
@@ -286,7 +286,7 @@
                 });
 
                 const data = await response.json();
-
+                
                 if (data.success) {
                     statusMessage.textContent = data.message;
                     navigator.vibrate(50);
