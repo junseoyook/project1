@@ -9,60 +9,46 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// 필수 환경변수 확인 및 설정
+const requiredEnvVars = {
+  SOLAPI_API_KEY: process.env.SOLAPI_API_KEY,
+  SOLAPI_API_SECRET: process.env.SOLAPI_API_SECRET,
+  SOLAPI_PFID: process.env.SOLAPI_PFID,
+  BASE_URL: process.env.BASE_URL
+};
+
+// 환경변수 유효성 검사
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([_, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  console.error('필수 환경변수가 설정되지 않았습니다:', missingVars.join(', '));
+  process.exit(1); // 필수 환경변수가 없으면 서버 실행 중단
+}
+
 // 환경변수 설정
-const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY;
-const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET;
-const SOLAPI_PFID = process.env.SOLAPI_PFID;
-const BASE_URL = process.env.BASE_URL;
+const {
+  SOLAPI_API_KEY,
+  SOLAPI_API_SECRET,
+  SOLAPI_PFID,
+  BASE_URL
+} = requiredEnvVars;
+
+// 선택적 환경변수 설정
 const SENDER_PHONE = process.env.SENDER_PHONE || '01029949608';
 const TOKEN_EXPIRY_HOURS = parseInt(process.env.TOKEN_EXPIRY_HOURS || '24', 10);
 const MAX_TOKEN_USES = parseInt(process.env.MAX_TOKEN_USES || '10', 10);
 
-// 환경변수 확인
-console.log('=== 환경변수 상태 확인 ===');
-console.log('SOLAPI_API_KEY:', SOLAPI_API_KEY || '미설정');
-console.log('SOLAPI_API_SECRET:', SOLAPI_API_SECRET ? '설정됨' : '미설정');
-console.log('SOLAPI_PFID:', SOLAPI_PFID || '미설정');
-console.log('BASE_URL:', BASE_URL || '미설정');
+// 설정된 환경변수 로깅
+console.log('=== 환경변수 설정 상태 ===');
+console.log('SOLAPI_API_KEY:', SOLAPI_API_KEY);
+console.log('SOLAPI_API_SECRET: [설정됨]');
+console.log('SOLAPI_PFID:', SOLAPI_PFID);
+console.log('BASE_URL:', BASE_URL);
 console.log('SENDER_PHONE:', SENDER_PHONE);
 console.log('TOKEN_EXPIRY_HOURS:', TOKEN_EXPIRY_HOURS);
 console.log('MAX_TOKEN_USES:', MAX_TOKEN_USES);
-
-if (!SOLAPI_API_KEY || !SOLAPI_API_SECRET || !SOLAPI_PFID || !BASE_URL) {
-  console.error('필수 환경변수가 설정되지 않았습니다!');
-  console.error('다음 환경변수를 확인해주세요:');
-  console.error('- SOLAPI_API_KEY');
-  console.error('- SOLAPI_API_SECRET');
-  console.error('- SOLAPI_PFID');
-  console.error('- BASE_URL');
-}
-
-// Solapi 인증 헤더 생성 함수
-function getAuthHeader() {
-  if (!SOLAPI_API_SECRET) {
-    console.error('SOLAPI_API_SECRET is undefined');
-    throw new Error('API Secret is not configured');
-  }
-
-  const date = new Date().toISOString();
-  const salt = Math.random().toString(36).substring(2, 15);
-  
-  console.log('인증 정보:', {
-    date,
-    salt,
-    apiSecret: SOLAPI_API_SECRET ? 'exists' : 'missing'
-  });
-
-  const signature = crypto
-    .createHmac('sha256', String(SOLAPI_API_SECRET))
-    .update(date + salt)
-    .digest('hex');
-
-  return {
-    Authorization: `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
-    'Content-Type': 'application/json'
-  };
-}
 
 // 토큰 저장소
 const tokens = new Map();
@@ -70,6 +56,27 @@ const tokens = new Map();
 // 토큰 생성 함수
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');
+}
+
+// Solapi 인증 헤더 생성 함수
+function getAuthHeader() {
+  const date = new Date().toISOString();
+  const salt = Math.random().toString(36).substring(2, 15);
+  
+  try {
+    const signature = crypto
+      .createHmac('sha256', SOLAPI_API_SECRET)
+      .update(date + salt)
+      .digest('hex');
+
+    return {
+      Authorization: `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
+      'Content-Type': 'application/json'
+    };
+  } catch (error) {
+    console.error('인증 헤더 생성 실패:', error);
+    throw new Error('인증 헤더 생성에 실패했습니다.');
+  }
 }
 
 // 토큰 검증 함수
