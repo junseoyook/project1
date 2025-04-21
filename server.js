@@ -67,6 +67,11 @@ function getAuthHeader() {
 // 토큰 저장소
 const tokens = new Map();
 
+// 토큰 생성 함수
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
 // 토큰 검증 함수
 function validateToken(token) {
   const tokenData = tokens.get(token);
