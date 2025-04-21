@@ -2,9 +2,9 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 // Solapi 설정
-const SOLAPI_API_KEY = 'YOUR_API_KEY';
-const SOLAPI_API_SECRET = 'YOUR_API_SECRET';
-const SOLAPI_PFID = 'YOUR_PFID';  // 카카오톡 비즈니스 채널 ID
+const SOLAPI_API_KEY = 'NCSDENI6NMKOWLIW';
+const SOLAPI_API_SECRET = 'R3I5EQNEG7IZMC5QN4MZJVUCW3VLLNYR';
+const SOLAPI_PFID = 'KA01PF250418061011563s4dMyyRSgrK';  // 카카오톡 비즈니스 채널 ID
 
 // Solapi 인증 헤더 생성 함수
 function getAuthHeader() {
@@ -27,17 +27,25 @@ async function sendKakaoNotification(phoneNumber, token) {
     const message = {
       message: {
         to: phoneNumber,
-        from: '발신번호',
-        text: `[전주 1호점 주차장]
-주차장 출입 URL이 생성되었습니다.
-${token.url}
+        from: '01029949608',  // 등록된 발신번호
+        text: `[전주호텔 북 앤 타이프] 🚗
 
-※ 본 URL은 24시간 동안 유효하며, 최대 10회까지 사용 가능합니다.
-※ 차량 진입 후 반드시 닫기 버튼을 눌러주세요.`,
+#{customerName}고객님,
+아래 링크로 주차장 및 공동현관 출입이 가능합니다.
+
+🚗 주차차단기 #{parking Url}
+🔐 공동현관문 #{entry Url}
+
+⏰ 이용 가능 시간`,
         kakaoOptions: {
           pfId: SOLAPI_PFID,
-          templateId: 'KA01', // 등록된 알림톡 템플릿 ID
-          disableSms: false // SMS 대체 발송 활성화
+          templateId: 'KA01TP250418063541272b3uS4NHhfLo', // 등록된 알림톡 템플릿 ID
+          disableSms: false, // SMS 대체 발송 활성화
+          variables: {
+            "#{customerName}": "고객",
+            "#{parking Url}": token.url,
+            "#{entry Url}": token.url
+          }
         }
       }
     };
