@@ -1,10 +1,34 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
 const axios = require('axios');
 const crypto = require('crypto');
 
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
+
+// 환경변수 확인
+const requiredEnvVars = [
+  'SOLAPI_API_KEY',
+  'SOLAPI_API_SECRET',
+  'SOLAPI_PFID',
+  'BASE_URL'
+];
+
+requiredEnvVars.forEach(varName => {
+  if (!process.env[varName]) {
+    console.error(`Error: ${varName} is not set in environment variables`);
+  } else {
+    console.log(`${varName} is set: ${varName === 'SOLAPI_API_SECRET' ? '[SECRET]' : process.env[varName]}`);
+  }
+});
+
 // Solapi 설정
-const SOLAPI_API_KEY = 'NCSDENI6NMKOWLIW';
-const SOLAPI_API_SECRET = 'R3I5EQNEG7IZMC5QN4MZJVUCW3VLLNYR';
-const SOLAPI_PFID = 'KA01PF250418061011563s4dMyyRSgrK';  // 카카오톡 비즈니스 채널 ID
+const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY;
+const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET;
+const SOLAPI_PFID = process.env.SOLAPI_PFID;
 
 // Solapi 인증 헤더 생성 함수
 function getAuthHeader() {
@@ -34,7 +58,7 @@ async function sendKakaoNotification(phoneNumber, token) {
     const message = {
       message: {
         to: phoneNumber,
-        from: '01029949608',  // 등록된 발신번호
+        from: '01029949608',
         text: `[전주호텔 북 앤 타이프] 🚗
 
 #{customerName}고객님,
@@ -43,15 +67,14 @@ async function sendKakaoNotification(phoneNumber, token) {
 🚗 주차차단기 #{parking Url}
 🔐 공동현관문 #{entry Url}
 
-⏰ 이용 가능 시간`,
+⏰ 이용 가능 시간: 24시간`,
         kakaoOptions: {
           pfId: SOLAPI_PFID,
-          templateId: 'KA01TP250418063541272b3uS4NHhfLo', // 등록된 알림톡 템플릿 ID
-          disableSms: false, // SMS 대체 발송 활성화
+          templateId: 'KA01TP250418063541272b3uS4NHhfLo',
           variables: {
-            "#{customerName}": "고객",
-            "#{parking Url}": token.url,
-            "#{entry Url}": token.url
+            customerName: '고객',
+            'parking Url': token.url,
+            'entry Url': token.url
           }
         }
       }
@@ -73,13 +96,30 @@ async function sendKakaoNotification(phoneNumber, token) {
   } catch (error) {
     console.error('알림톡 발송 실패:', {
       error: error.message,
-      response: error.response?.data
+      response: error.response?.data,
+      stack: error.stack
     });
     throw error;
   }
 }
 
-// 토큰 생성 API 엔드포인트 수정
+// 토큰 생성 함수
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// 토큰 저장 함수 (임시 메모리 저장)
+const tokens = new Map();
+async function saveToken(token, phoneNumber) {
+  tokens.set(token, {
+    phoneNumber,
+    createdAt: new Date(),
+    useCount: 0
+  });
+  console.log('토큰 저장됨:', { token, phoneNumber });
+}
+
+// 토큰 생성 API 엔드포인트
 app.post('/api/generate-token', async (req, res) => {
   try {
     const { phoneNumber } = req.body;
@@ -110,7 +150,13 @@ app.post('/api/generate-token', async (req, res) => {
     console.error('토큰 생성 실패:', error);
     res.status(500).json({
       success: false,
-      error: '토큰 생성 중 오류가 발생했습니다.'
+      error: '토큰 생성 중 오류가 발생했습니다: ' + error.message
     });
   }
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`서버 실행 중: 포트 ${PORT}`);
+  console.log('환경변수 BASE_URL:', process.env.BASE_URL);
 }); 
