@@ -24,6 +24,13 @@ function getAuthHeader() {
 // 알림톡 발송 함수
 async function sendKakaoNotification(phoneNumber, token) {
   try {
+    console.log('알림톡 발송 시작:', {
+      phoneNumber,
+      tokenUrl: token.url,
+      apiKey: SOLAPI_API_KEY,
+      pfId: SOLAPI_PFID
+    });
+
     const message = {
       message: {
         to: phoneNumber,
@@ -50,15 +57,24 @@ async function sendKakaoNotification(phoneNumber, token) {
       }
     };
 
+    console.log('Solapi 요청 데이터:', JSON.stringify(message, null, 2));
+
+    const headers = getAuthHeader();
+    console.log('인증 헤더:', headers);
+
     const response = await axios.post(
       'https://api.solapi.com/messages/v4/send',
       message,
-      { headers: getAuthHeader() }
+      { headers }
     );
 
+    console.log('Solapi 응답:', response.data);
     return response.data;
   } catch (error) {
-    console.error('알림톡 발송 실패:', error);
+    console.error('알림톡 발송 실패:', {
+      error: error.message,
+      response: error.response?.data
+    });
     throw error;
   }
 }
@@ -67,6 +83,8 @@ async function sendKakaoNotification(phoneNumber, token) {
 app.post('/api/generate-token', async (req, res) => {
   try {
     const { phoneNumber } = req.body;
+    console.log('토큰 생성 요청:', { phoneNumber });
+
     if (!phoneNumber) {
       return res.status(400).json({ success: false, error: '전화번호가 필요합니다.' });
     }
@@ -74,9 +92,11 @@ app.post('/api/generate-token', async (req, res) => {
     // 토큰 생성 로직
     const token = generateToken();
     const tokenUrl = `${process.env.BASE_URL}/customer/${token}`;
+    console.log('토큰 생성됨:', { token, tokenUrl });
 
     // 알림톡 발송
-    await sendKakaoNotification(phoneNumber, { url: tokenUrl });
+    const result = await sendKakaoNotification(phoneNumber, { url: tokenUrl });
+    console.log('알림톡 발송 결과:', result);
 
     // 토큰 저장
     await saveToken(token, phoneNumber);
