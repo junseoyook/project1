@@ -9,26 +9,27 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// 환경변수 확인
-const requiredEnvVars = [
-  'SOLAPI_API_KEY',
-  'SOLAPI_API_SECRET',
-  'SOLAPI_PFID',
-  'BASE_URL'
-];
-
-requiredEnvVars.forEach(varName => {
-  if (!process.env[varName]) {
-    console.error(`Error: ${varName} is not set in environment variables`);
-  } else {
-    console.log(`${varName} is set: ${varName === 'SOLAPI_API_SECRET' ? '[SECRET]' : process.env[varName]}`);
-  }
-});
-
-// Solapi 설정
+// 환경변수 설정
 const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY;
 const SOLAPI_API_SECRET = process.env.SOLAPI_API_SECRET;
 const SOLAPI_PFID = process.env.SOLAPI_PFID;
+const BASE_URL = process.env.BASE_URL;
+
+// 환경변수 확인
+console.log('=== 환경변수 상태 확인 ===');
+console.log('SOLAPI_API_KEY:', SOLAPI_API_KEY || '미설정');
+console.log('SOLAPI_API_SECRET:', SOLAPI_API_SECRET ? '설정됨' : '미설정');
+console.log('SOLAPI_PFID:', SOLAPI_PFID || '미설정');
+console.log('BASE_URL:', BASE_URL || '미설정');
+
+if (!SOLAPI_API_KEY || !SOLAPI_API_SECRET || !SOLAPI_PFID || !BASE_URL) {
+  console.error('필수 환경변수가 설정되지 않았습니다!');
+  console.error('다음 환경변수를 확인해주세요:');
+  console.error('- SOLAPI_API_KEY');
+  console.error('- SOLAPI_API_SECRET');
+  console.error('- SOLAPI_PFID');
+  console.error('- BASE_URL');
+}
 
 // Solapi 인증 헤더 생성 함수
 function getAuthHeader() {
