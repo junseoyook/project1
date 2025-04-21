@@ -153,23 +153,13 @@ async function sendKakaoNotification(phoneNumber, token) {
       message: {
         to: phoneNumber,
         from: SENDER_PHONE,
-        text: `[전주호텔 북 앤 타이프] 🚗
-
-#{고객명}고객님,
-아래 링크로 주차장 및 공동현관 출입이 가능합니다.
-
-🚗 주차차단기 #{주차URL}
-🔐 공동현관문 #{현관URL}
-
-⏰ 이용 가능 시간: ${TOKEN_EXPIRY_HOURS}시간
-⚠️ 최대 사용 가능 횟수: ${MAX_TOKEN_USES}회`,
         kakaoOptions: {
           pfId: SOLAPI_PFID,
           templateId: 'KA01TP250418063541272b3uS4NHhfLo',
           variables: {
-            '고객명': '고객',
-            '주차URL': token.url,
-            '현관URL': token.url
+            "고객명": "고객",
+            "주차URL": token.url,
+            "현관URL": token.url
           }
         }
       }
