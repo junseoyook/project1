@@ -11,58 +11,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 토큰 생성 함수
 async function generateToken() {
-    const button = document.querySelector('#token button.btn-primary');
-    const tokenDisplay = document.getElementById('tokenDisplay');
+    const phoneInput = document.getElementById('phoneNumber');
+    const phoneNumber = phoneInput.value.replace(/[^0-9]/g, '');
     
-    if (!button || !tokenDisplay) {
-        console.error('필요한 DOM 요소를 찾을 수 없습니다');
+    if (!phoneNumber || phoneNumber.length !== 11) {
+        alert('올바른 휴대폰 번호를 입력해주세요.');
         return;
     }
-    
+
+    const generateBtn = document.getElementById('generateToken');
+    const originalText = generateBtn.textContent;
+    generateBtn.disabled = true;
+    generateBtn.textContent = '생성 중...';
+
     try {
-        // 버튼 비활성화 및 로딩 상태 표시
-        button.disabled = true;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 생성 중...';
-        
-        const response = await fetch(`${API_BASE_URL}/api/generate-token`, {
+        const response = await fetch('/api/generate-token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({}) // 빈 객체라도 보내기
+            body: JSON.stringify({ phoneNumber })
         });
 
         const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || '토큰 생성에 실패했습니다');
-        }
 
-        const fullUrl = `${API_BASE_URL}/customer/${data.url}`;
-        
-        // 토큰 URL 표시
-        tokenDisplay.value = fullUrl;
-        
-        // 복사 버튼 활성화
-        const copyButton = document.getElementById('copyToken');
-        if (copyButton) {
-            copyButton.disabled = false;
+        if (data.success) {
+            alert('토큰이 생성되었으며 알림톡이 발송되었습니다.');
+            phoneInput.value = '';
+        } else {
+            throw new Error(data.error || '토큰 생성에 실패했습니다.');
         }
-        
-        // 성공 메시지 표시
-        showSuccessMessage(`
-            토큰이 생성되었습니다.<br>
-            1. "복사" 버튼을 눌러 URL을 복사하고 고객에게 전달하세요.<br>
-            2. 고객은 이 URL을 통해 24시간 동안 최대 10회까지 원격으로 차단기를 제어할 수 있습니다.<br>
-            3. URL은 고객 한 명당 새로 생성해야 합니다.
-        `);
     } catch (error) {
-        console.error('토큰 생성 오류:', error);
-        showErrorMessage(error.message || '토큰 생성에 실패했습니다. 다시 시도해주세요.');
+        alert(error.message);
     } finally {
-        // 버튼 상태 복원
-        button.disabled = false;
-        button.textContent = '토큰 생성';
+        generateBtn.disabled = false;
+        generateBtn.textContent = originalText;
     }
 }
 
