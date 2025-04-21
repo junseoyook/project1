@@ -32,10 +32,22 @@ const SOLAPI_PFID = process.env.SOLAPI_PFID;
 
 // Solapi 인증 헤더 생성 함수
 function getAuthHeader() {
+  if (!SOLAPI_API_SECRET) {
+    console.error('SOLAPI_API_SECRET is undefined');
+    throw new Error('API Secret is not configured');
+  }
+
   const date = new Date().toISOString();
   const salt = Math.random().toString(36).substring(2, 15);
+  
+  console.log('인증 정보:', {
+    date,
+    salt,
+    apiSecret: SOLAPI_API_SECRET ? 'exists' : 'missing'
+  });
+
   const signature = crypto
-    .createHmac('sha256', SOLAPI_API_SECRET)
+    .createHmac('sha256', String(SOLAPI_API_SECRET))
     .update(date + salt)
     .digest('hex');
 
@@ -158,5 +170,9 @@ app.post('/api/generate-token', async (req, res) => {
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`서버 실행 중: 포트 ${PORT}`);
-  console.log('환경변수 BASE_URL:', process.env.BASE_URL);
+  console.log('환경변수 상태:');
+  console.log('BASE_URL:', process.env.BASE_URL);
+  console.log('SOLAPI_API_KEY:', process.env.SOLAPI_API_KEY ? '설정됨' : '미설정');
+  console.log('SOLAPI_API_SECRET:', process.env.SOLAPI_API_SECRET ? '설정됨' : '미설정');
+  console.log('SOLAPI_PFID:', process.env.SOLAPI_PFID ? '설정됨' : '미설정');
 }); 
