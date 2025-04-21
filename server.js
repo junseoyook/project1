@@ -70,6 +70,10 @@ function generateToken() {
 
 // Solapi 인증 헤더 생성 함수
 function getAuthHeader() {
+  if (!SOLAPI_API_KEY || !SOLAPI_API_SECRET) {
+    throw new Error('API 키 또는 시크릿이 설정되지 않았습니다.');
+  }
+
   const date = new Date().toISOString();
   const salt = crypto.randomBytes(32).toString('hex');
   
@@ -79,20 +83,15 @@ function getAuthHeader() {
       .update(date + salt)
       .digest('hex');
 
-    console.log('인증 정보 생성:', {
-      apiKey: SOLAPI_API_KEY,
-      date,
-      salt: salt.substring(0, 10) + '...',
-      signature: signature.substring(0, 10) + '...'
-    });
+    const authorization = `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`;
 
     return {
-      Authorization: `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
+      'Authorization': authorization,
       'Content-Type': 'application/json'
     };
   } catch (error) {
     console.error('인증 헤더 생성 실패:', error);
-    throw new Error('인증 헤더 생성에 실패했습니다.');
+    throw error;
   }
 }
 
@@ -143,44 +142,42 @@ function useToken(token) {
 // 알림톡 발송 함수
 async function sendKakaoNotification(phoneNumber, token) {
   try {
-    console.log('알림톡 발송 시작:', {
-      phoneNumber,
-      tokenUrl: token.url
-    });
-
-    const message = {
+    const messageData = {
       message: {
         to: phoneNumber,
         from: SENDER_PHONE,
-        text: `[전주호텔 북 앤 타이프] 주차장 출입 안내`,
+        text: "[전주호텔 북 앤 타이프] 주차장 출입 안내",
         kakaoOptions: {
           pfId: SOLAPI_PFID,
-          templateId: 'KA01TP250418063541272b3uS4NHhfLo',
+          templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            고객명: "고객",
-            주차URL: token.url,
-            현관URL: token.url
+            "고객명": "고객",
+            "주차URL": token.url,
+            "현관URL": token.url
           }
         }
       }
     };
 
-    console.log('Solapi 요청 데이터:', JSON.stringify(message, null, 2));
-
-    const headers = getAuthHeader();
-    console.log('요청 헤더:', {
-      Authorization: headers.Authorization.substring(0, 50) + '...',
-      'Content-Type': headers['Content-Type']
+    console.log('알림톡 발송 시작:', {
+      phoneNumber,
+      tokenUrl: token.url,
+      messageData: JSON.stringify(messageData, null, 2)
     });
 
-    const response = await axios.post(
-      'https://api.solapi.com/messages/v4/send',
-      message,
-      { 
-        headers,
-        timeout: 10000 // 10초 타임아웃 설정
-      }
-    );
+    const headers = getAuthHeader();
+    console.log('API 인증 정보:', {
+      apiKey: SOLAPI_API_KEY,
+      pfId: SOLAPI_PFID
+    });
+
+    const response = await axios({
+      method: 'post',
+      url: 'https://api.solapi.com/messages/v4/send',
+      headers: headers,
+      data: messageData,
+      timeout: 10000
+    });
 
     console.log('Solapi 응답:', response.data);
     return response.data;
@@ -188,7 +185,7 @@ async function sendKakaoNotification(phoneNumber, token) {
     console.error('알림톡 발송 실패:', {
       message: error.message,
       response: error.response?.data,
-      config: error.config
+      requestData: error.config?.data
     });
     throw error;
   }
