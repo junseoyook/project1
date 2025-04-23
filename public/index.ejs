@@ -289,6 +289,10 @@
         </div>
     </div>
 
+    <script>
+        // API 키 설정 (서버에서 동적으로 주입)
+        window.API_KEY = '<%= process.env.API_KEY %>';
+    </script>
     <script src="/scripts/admin.js"></script>
     <script>
         // 페이지 전환 처리

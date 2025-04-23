@@ -5,6 +5,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const WebSocket = require('ws');
 const http = require('http');
+const path = require('path');
 
 // 환경변수 디버깅
 console.log('==== 환경변수 디버깅 시작 ====');
@@ -22,7 +23,22 @@ console.log('process.env:', {
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+
+// EJS 템플릿 엔진 설정
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'public'));
+
+// 정적 파일 제공 설정
+app.use(express.static('public', {
+  index: false // index.html을 직접 처리하기 위해 비활성화
+}));
+
+// 메인 페이지 라우트
+app.get('/', (req, res) => {
+  res.render('index', {
+    API_KEY: process.env.API_KEY
+  });
+});
 
 // 필수 환경변수 확인 및 설정
 const requiredEnvVars = {

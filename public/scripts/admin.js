@@ -1,5 +1,6 @@
 // API 기본 URL 설정
 const API_BASE_URL = window.location.origin;
+const API_KEY = window.API_KEY; // 서버에서 전달받은 API 키 사용
 
 // DOM이 로드되면 이벤트 리스너 등록
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,7 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/generate-tokens', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'x-api-key': API_KEY
                 },
                 body: JSON.stringify({ 
                     phoneNumber,
