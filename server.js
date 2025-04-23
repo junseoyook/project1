@@ -258,6 +258,12 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
     const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
     const doorUrl = `${BASE_URL}/door.html?token=${doorToken}`;
     
+    console.log('알림톡 발송 시도:', {
+      phoneNumber,
+      parkingUrl,
+      doorUrl
+    });
+
     const messageData = {
       message: {
         to: phoneNumber,
@@ -275,6 +281,8 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
         }
       }
     };
+
+    console.log('알림톡 요청 데이터:', JSON.stringify(messageData, null, 2));
 
     const headers = getAuthHeader();
     const response = await axios.post('https://api.solapi.com/messages/v4/send', messageData, { headers });
