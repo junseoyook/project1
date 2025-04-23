@@ -224,13 +224,6 @@
                 <div class="card-body">
                     <form id="tokenForm">
                         <div class="form-group mb-3">
-                            <label for="tokenType" class="form-label">발급 유형</label>
-                            <select id="tokenType" class="form-control" required>
-                                <option value="parking">주차장</option>
-                                <option value="door">현관문</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
                             <label for="phoneNumber">고객 전화번호</label>
                             <input type="tel" id="phoneNumber" class="form-control" 
                                    placeholder="01012345678" pattern="[0-9]{11}" 
@@ -256,6 +249,27 @@
                         </div>
                     </form>
                     <div id="resultMessage" class="alert mt-3" style="display: none;"></div>
+                    <div id="generatedUrls" class="mt-4" style="display: none;">
+                        <h4>생성된 URL</h4>
+                        <div class="url-container mb-3">
+                            <label>주차장 URL:</label>
+                            <div class="input-group">
+                                <input type="text" id="parkingUrl" class="form-control" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyUrl('parkingUrl')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="url-container">
+                            <label>현관문 URL:</label>
+                            <div class="input-group">
+                                <input type="text" id="doorUrl" class="form-control" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyUrl('doorUrl')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const phoneInput = document.getElementById('phoneNumber');
         const submitButton = document.getElementById('generateToken');
         const phoneNumber = phoneInput.value.replace(/[^0-9]/g, '');
+        const expiryHours = document.getElementById('expiryHours').value;
         
         if (!phoneNumber || phoneNumber.length !== 11) {
             showMessage('올바른 휴대폰 번호를 입력해주세요.', 'danger');
@@ -29,29 +30,58 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.disabled = true;
             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>처리 중...';
             
-            const response = await fetch('/api/generate-token', {
+            // 주차장 토큰 생성
+            const parkingResponse = await fetch('/api/generate-token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ phoneNumber })
+                body: JSON.stringify({ 
+                    phoneNumber,
+                    type: 'parking',
+                    expiryHours
+                })
             });
 
-            const data = await response.json();
+            // 현관문 토큰 생성
+            const doorResponse = await fetch('/api/generate-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    phoneNumber,
+                    type: 'door',
+                    expiryHours
+                })
+            });
 
-            if (data.success) {
+            const parkingData = await parkingResponse.json();
+            const doorData = await doorResponse.json();
+
+            if (parkingData.success && doorData.success) {
+                // 생성된 URL 표시
+                const generatedUrls = document.getElementById('generatedUrls');
+                const parkingUrl = document.getElementById('parkingUrl');
+                const doorUrl = document.getElementById('doorUrl');
+                
+                parkingUrl.value = window.location.origin + parkingData.url;
+                doorUrl.value = window.location.origin + doorData.url;
+                generatedUrls.style.display = 'block';
+                
                 showMessage('토큰이 생성되었으며 알림톡이 발송되었습니다.', 'success');
                 phoneInput.value = '';
+                
                 // 토큰 생성 후 히스토리 새로고침
                 loadTokenHistory();
             } else {
-                throw new Error(data.error || '토큰 생성에 실패했습니다.');
+                throw new Error(parkingData.error || doorData.error || '토큰 생성에 실패했습니다.');
             }
         } catch (error) {
             showMessage(error.message, 'danger');
         } finally {
             submitButton.disabled = false;
-            submitButton.textContent = '토큰 생성 및 알림톡 발송';
+            submitButton.textContent = 'URL 생성 및 알림톡 발송';
         }
     }
 
@@ -200,4 +230,27 @@ function showErrorMessage(message) {
         existingAlert.remove();
     }
     cardBody.appendChild(messageDiv);
+}
+
+// URL 복사 함수
+function copyUrl(inputId) {
+    const input = document.getElementById(inputId);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    try {
+        navigator.clipboard.writeText(input.value)
+            .then(() => {
+                showMessage('URL이 클립보드에 복사되었습니다.', 'success');
+            })
+            .catch(err => {
+                // 구형 브라우저 지원
+                document.execCommand('copy');
+                showMessage('URL이 클립보드에 복사되었습니다.', 'success');
+            });
+    } catch (err) {
+        // 구형 브라우저 지원
+        document.execCommand('copy');
+        showMessage('URL이 클립보드에 복사되었습니다.', 'success');
+    }
 } 
