@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const crypto = require('crypto');
+const WebSocket = require('ws');
+const http = require('http');
 
 // 환경변수 디버깅
 console.log('==== 환경변수 디버깅 시작 ====');
@@ -75,6 +77,21 @@ const tokens = new Map();
 
 // 토큰 히스토리 저장소
 const tokenHistory = new Map();
+
+// 환경변수에 API 키 추가
+const API_KEY = process.env.API_KEY || 'your-secret-api-key';
+
+// API 키 검증 미들웨어
+const validateApiKey = (req, res, next) => {
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey || apiKey !== API_KEY) {
+    return res.status(401).json({
+      success: false,
+      error: '유효하지 않은 API 키입니다.'
+    });
+  }
+  next();
+};
 
 // 토큰 생성 함수
 function generateToken() {
@@ -262,43 +279,132 @@ async function sendKakaoNotification(phoneNumber, token, type) {
   }
 }
 
-// 토큰 검증 API 엔드포인트
-app.get('/api/validate-token/:token', async (req, res) => {
-  const { token } = req.params;
-  const validation = validateToken(token);
-  
-  if (validation.isValid) {
+// HTTP 서버 생성
+const server = http.createServer(app);
+
+// WebSocket 서버 생성
+const wss = new WebSocket.Server({ server });
+
+// WebSocket 연결 관리
+wss.on('connection', (ws) => {
+    console.log('새로운 WebSocket 연결');
+
+    ws.on('message', async (message) => {
+        try {
+            const data = JSON.parse(message);
+            console.log('수신된 WebSocket 메시지:', data);
+
+            // ESP32로 명령 전달 (실제 구현 필요)
+            // 여기서는 성공 응답만 보냄
+            ws.send(JSON.stringify({
+                status: 'success',
+                message: '명령이 전송되었습니다.',
+                timestamp: new Date().toISOString()
+            }));
+        } catch (error) {
+            console.error('WebSocket 메시지 처리 오류:', error);
+            ws.send(JSON.stringify({
+                status: 'error',
+                message: '명령 처리 중 오류가 발생했습니다.'
+            }));
+        }
+    });
+
+    ws.on('close', () => {
+        console.log('WebSocket 연결 종료');
+    });
+});
+
+// 고객 페이지 라우트 핸들러 수정
+app.get('/customer/:token', (req, res) => {
+    const { token } = req.params;
+    const validation = validateToken(token);
+    
+    if (!validation.isValid) {
+        res.status(400).send(`
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>오류</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            margin: 0;
+                            background-color: #f5f5f5;
+                        }
+                        .error-container {
+                            text-align: center;
+                            padding: 20px;
+                            background: white;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                        .error-message {
+                            color: #dc3545;
+                            margin-bottom: 20px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="error-container">
+                        <div class="error-message">${validation.reason}</div>
+                    </div>
+                </body>
+            </html>
+        `);
+        return;
+    }
+
     const tokenData = tokens.get(token);
     
+    // 토큰 타입에 따라 다른 페이지로 리다이렉션
     if (tokenData.type === 'door') {
-      try {
-        // 프로토타입: 현관문 제어 시뮬레이션
-        const result = await controlDoor('open');
-        useToken(token);
-        console.log('[프로토타입] 현관문 제어 결과:', result);
-        res.json({ 
-          success: true, 
-          message: '현관문 제어 요청이 처리되었습니다.',
-          details: '(프로토타입 모드)'
-        });
-      } catch (error) {
-        console.error('[프로토타입] 현관문 제어 오류:', error);
-        res.status(500).json({ 
-          success: false, 
-          error: '현관문 제어 처리 중 오류가 발생했습니다.' 
-        });
-      }
+        res.sendFile('door.html', { root: './public' });
     } else {
-      // 주차장 토큰
-      useToken(token);
-      res.json({ success: true });
+        res.sendFile('parking.html', { root: './public' });
     }
-  } else {
-    res.status(400).json({ 
-      success: false, 
-      error: validation.reason 
-    });
-  }
+});
+
+// 토큰 검증 API 엔드포인트 수정
+app.get('/api/validate-token/:token', async (req, res) => {
+    const { token } = req.params;
+    const validation = validateToken(token);
+    const tokenData = tokens.get(token);
+    
+    if (validation.isValid) {
+        if (tokenData.type === 'door') {
+            try {
+                const result = await controlDoor('open');
+                useToken(token);
+                res.json({ 
+                    success: true, 
+                    message: '현관문이 열렸습니다.',
+                    remainingUses: tokenData.maxUses - tokenData.useCount
+                });
+            } catch (error) {
+                res.status(500).json({ 
+                    success: false, 
+                    error: '현관문 제어 중 오류가 발생했습니다.' 
+                });
+            }
+        } else {
+            useToken(token);
+            res.json({ 
+                success: true,
+                remainingUses: tokenData.maxUses - tokenData.useCount
+            });
+        }
+    } else {
+        res.status(400).json({ 
+            success: false, 
+            error: validation.reason 
+        });
+    }
 });
 
 // 토큰 생성 API 엔드포인트
@@ -369,55 +475,6 @@ app.post('/api/generate-token', async (req, res) => {
       error: '토큰 생성 중 오류가 발생했습니다: ' + error.message
     });
   }
-});
-
-// 고객 페이지 라우트 핸들러 추가
-app.get('/customer/:token', (req, res) => {
-  const { token } = req.params;
-  const validation = validateToken(token);
-  
-  if (!validation.isValid) {
-    res.status(400).send(`
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>오류</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background-color: #f5f5f5;
-            }
-            .error-container {
-              text-align: center;
-              padding: 20px;
-              background: white;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            .error-message {
-              color: #dc3545;
-              margin-bottom: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="error-container">
-            <div class="error-message">${validation.reason}</div>
-          </div>
-        </body>
-      </html>
-    `);
-    return;
-  }
-
-  // 토큰이 유효하면 customer.html 페이지 제공
-  res.sendFile('customer.html', { root: './public' });
 });
 
 // 토큰 히스토리 조회 API 엔드포인트 추가
@@ -508,8 +565,110 @@ app.get('/api/dashboard-stats', (req, res) => {
     }
 });
 
+// 토큰 동시 생성 함수
+async function generateBothTokens(phoneNumber, checkInDate, checkOutDate) {
+  try {
+    // 주차장과 현관문 토큰 생성
+    const parkingToken = generateToken();
+    const doorToken = generateToken();
+    
+    // 체크인/아웃 시간을 기반으로 유효 시간 계산
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+    const durationHours = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60));
+    
+    // 토큰 저장
+    await Promise.all([
+      saveToken(parkingToken, phoneNumber, 'parking', durationHours),
+      saveToken(doorToken, phoneNumber, 'door', durationHours)
+    ]);
+
+    // 알림톡 발송 (두 URL을 하나의 메시지로)
+    const parkingUrl = `${BASE_URL}/customer/${parkingToken}`;
+    const doorUrl = `${BASE_URL}/customer/${doorToken}`;
+    
+    const messageData = {
+      message: {
+        to: phoneNumber,
+        from: SENDER_PHONE,
+        kakaoOptions: {
+          pfId: SOLAPI_PFID,
+          templateId: "KA01TP250418063541272b3uS4NHhfLo",
+          variables: {
+            "#{customerName}": "고객님",
+            "#{parkingUrl}": parkingUrl,
+            "#{doorUrl}": doorUrl,
+            "#{checkIn}": new Date(checkInDate).toLocaleDateString('ko-KR'),
+            "#{checkOut}": new Date(checkOutDate).toLocaleDateString('ko-KR')
+          }
+        }
+      }
+    };
+
+    const result = await axios({
+      method: 'post',
+      url: 'https://api.solapi.com/messages/v4/send',
+      headers: getAuthHeader(),
+      data: messageData
+    });
+
+    return {
+      success: true,
+      parkingToken,
+      doorToken,
+      parkingUrl,
+      doorUrl,
+      messageResult: result.data
+    };
+  } catch (error) {
+    console.error('토큰 생성 실패:', error);
+    throw error;
+  }
+}
+
+// Make.com 연동을 위한 새로운 API 엔드포인트
+app.post('/api/reservation/tokens', validateApiKey, async (req, res) => {
+  try {
+    const { phoneNumber, checkInDate, checkOutDate } = req.body;
+
+    // 필수 파라미터 검증
+    if (!phoneNumber || !checkInDate || !checkOutDate) {
+      return res.status(400).json({
+        success: false,
+        error: '필수 파라미터가 누락되었습니다. (phoneNumber, checkInDate, checkOutDate)'
+      });
+    }
+
+    // 날짜 형식 검증
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+    
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: '유효하지 않은 날짜 형식입니다.'
+      });
+    }
+
+    // 토큰 생성 및 알림톡 발송
+    const result = await generateBothTokens(phoneNumber, checkInDate, checkOutDate);
+    
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('예약 토큰 생성 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '토큰 생성 중 오류가 발생했습니다: ' + error.message
+    });
+  }
+});
+
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`서버 실행 중: 포트 ${PORT}`);
   console.log('환경변수 상태:');
   console.log('BASE_URL:', process.env.BASE_URL);
