@@ -27,10 +27,14 @@ const requiredEnvVars = {
   SOLAPI_API_KEY: process.env.SOLAPI_API_KEY,
   SOLAPI_API_SECRET: process.env.SOLAPI_API_SECRET,
   SOLAPI_PFID: process.env.SOLAPI_PFID,
+  BASE_URL: process.env.BASE_URL
+};
+
+// 선택적 환경변수
+const optionalEnvVars = {
   SWITCHBOT_TOKEN: process.env.SWITCHBOT_TOKEN,
   SWITCHBOT_SECRET: process.env.SWITCHBOT_SECRET,
-  SWITCHBOT_DEVICE_ID: process.env.SWITCHBOT_DEVICE_ID,
-  BASE_URL: process.env.BASE_URL
+  SWITCHBOT_DEVICE_ID: process.env.SWITCHBOT_DEVICE_ID
 };
 
 // 환경변수 유효성 검사
@@ -48,9 +52,6 @@ const {
   SOLAPI_API_KEY,
   SOLAPI_API_SECRET,
   SOLAPI_PFID,
-  SWITCHBOT_TOKEN,
-  SWITCHBOT_SECRET,
-  SWITCHBOT_DEVICE_ID,
   BASE_URL
 } = requiredEnvVars;
 
@@ -134,26 +135,18 @@ function getSwitchBotHeaders() {
   };
 }
 
-// 현관문 제어 함수
+// 현관문 제어 함수 (프로토타입)
 async function controlDoor(command) {
-  try {
-    const headers = getSwitchBotHeaders();
-    const response = await axios({
-      method: 'post',
-      url: `https://api.switch-bot.com/v1.1/devices/${SWITCHBOT_DEVICE_ID}/commands`,
-      headers,
-      data: {
-        command: command === 'open' ? 'press' : 'press',
-        parameter: 'default'
-      }
-    });
-
-    console.log('스위치봇 응답:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('현관문 제어 실패:', error);
-    throw error;
-  }
+  console.log(`[프로토타입] 현관문 ${command} 요청 처리`);
+  
+  // 실제 API 호출 대신 성공 응답 반환
+  return {
+    statusCode: 200,
+    body: {
+      message: `현관문 ${command} 요청이 성공적으로 처리되었습니다.`,
+      status: 'success'
+    }
+  };
 }
 
 // 토큰 검증 함수
@@ -279,14 +272,20 @@ app.get('/api/validate-token/:token', async (req, res) => {
     
     if (tokenData.type === 'door') {
       try {
-        // 현관문 제어
-        await controlDoor('open');
+        // 프로토타입: 현관문 제어 시뮬레이션
+        const result = await controlDoor('open');
         useToken(token);
-        res.json({ success: true, message: '현관문이 열렸습니다.' });
+        console.log('[프로토타입] 현관문 제어 결과:', result);
+        res.json({ 
+          success: true, 
+          message: '현관문 제어 요청이 처리되었습니다.',
+          details: '(프로토타입 모드)'
+        });
       } catch (error) {
+        console.error('[프로토타입] 현관문 제어 오류:', error);
         res.status(500).json({ 
           success: false, 
-          error: '현관문 제어 중 오류가 발생했습니다.' 
+          error: '현관문 제어 처리 중 오류가 발생했습니다.' 
         });
       }
     } else {
