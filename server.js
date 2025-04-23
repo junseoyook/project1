@@ -189,17 +189,21 @@ function validateToken(token) {
 
   const now = new Date();
   const expiryTime = new Date(tokenData.createdAt);
-  expiryTime.setHours(expiryTime.getHours() + TOKEN_EXPIRY_HOURS);
+  expiryTime.setHours(expiryTime.getHours() + tokenData.expiryHours);
 
   if (now > expiryTime) {
     return { isValid: false, reason: '만료된 토큰입니다.' };
   }
 
-  if (tokenData.useCount >= MAX_TOKEN_USES) {
+  if (tokenData.useCount >= tokenData.maxUses) {
     return { isValid: false, reason: '사용 횟수를 초과했습니다.' };
   }
 
-  return { isValid: true };
+  return { 
+    isValid: true,
+    remainingUses: tokenData.maxUses - tokenData.useCount,
+    expiresIn: Math.floor((expiryTime - now) / (1000 * 60 * 60)) + '시간'
+  };
 }
 
 // 토큰 저장 함수
@@ -273,8 +277,8 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
             "#{customerName}": "고객님",
-            "#{entry Url}": parkingUrl,    // 주차장 URL
-            "#{parking Url}": doorUrl,     // 현관문 URL
+            "#{parking Url}": parkingUrl,    // 주차장 URL
+            "#{entry Url}": doorUrl,         // 현관문 URL
             "#{checkInTime}": "발급 시점",
             "#{checkOutTime}": "24시간"
           }

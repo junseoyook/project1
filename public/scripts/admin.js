@@ -1,6 +1,6 @@
 // API 기본 URL 설정
 const API_BASE_URL = window.location.origin;
-const API_KEY = 'your-secret-api-key'; // API 키 직접 설정
+const API_KEY = process.env.API_KEY || 'your-secret-api-key';
 
 // DOM이 로드되면 이벤트 리스너 등록
 document.addEventListener('DOMContentLoaded', () => {
