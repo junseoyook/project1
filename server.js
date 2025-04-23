@@ -63,6 +63,9 @@ console.log('MAX_TOKEN_USES:', MAX_TOKEN_USES);
 // 토큰 저장소
 const tokens = new Map();
 
+// 토큰 히스토리 저장소
+const tokenHistory = new Map();
+
 // 토큰 생성 함수
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');
@@ -127,22 +130,47 @@ function validateToken(token) {
 
 // 토큰 저장 함수
 async function saveToken(token, phoneNumber) {
-  tokens.set(token, {
+  const timestamp = new Date();
+  const tokenData = {
     phoneNumber,
-    createdAt: new Date(),
+    createdAt: timestamp,
     useCount: 0,
     lastUsed: null
-  });
+  };
+  
+  // 토큰 데이터 저장
+  tokens.set(token, tokenData);
+  
+  // 히스토리에 기록
+  const historyEntry = {
+    token,
+    phoneNumber,
+    createdAt: timestamp,
+    url: `${BASE_URL}/customer/${token}`,
+    status: 'active',
+    useCount: 0,
+    lastUsed: null
+  };
+  tokenHistory.set(token, historyEntry);
+  
   console.log('토큰 저장됨:', { token, phoneNumber });
 }
 
 // 토큰 사용 함수
 function useToken(token) {
   const tokenData = tokens.get(token);
-  if (tokenData) {
+  const historyEntry = tokenHistory.get(token);
+  
+  if (tokenData && historyEntry) {
+    const now = new Date();
     tokenData.useCount += 1;
-    tokenData.lastUsed = new Date();
+    tokenData.lastUsed = now;
     tokens.set(token, tokenData);
+    
+    historyEntry.useCount = tokenData.useCount;
+    historyEntry.lastUsed = now;
+    tokenHistory.set(token, historyEntry);
+    
     console.log('토큰 사용됨:', { token, useCount: tokenData.useCount });
   }
 }
@@ -327,6 +355,33 @@ app.get('/customer/:token', (req, res) => {
 
   // 토큰이 유효하면 customer.html 페이지 제공
   res.sendFile('customer.html', { root: './public' });
+});
+
+// 토큰 히스토리 조회 API 엔드포인트 추가
+app.get('/api/token-history', (req, res) => {
+  try {
+    const history = Array.from(tokenHistory.values())
+      .sort((a, b) => b.createdAt - a.createdAt) // 최신순 정렬
+      .map(entry => {
+        const validation = validateToken(entry.token);
+        return {
+          ...entry,
+          isValid: validation.isValid,
+          status: validation.isValid ? 'active' : 'expired'
+        };
+      });
+    
+    res.json({
+      success: true,
+      history
+    });
+  } catch (error) {
+    console.error('토큰 히스토리 조회 실패:', error);
+    res.status(500).json({
+      success: false,
+      error: '토큰 히스토리 조회 중 오류가 발생했습니다.'
+    });
+  }
 });
 
 const PORT = process.env.PORT || 8080;
