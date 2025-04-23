@@ -264,13 +264,11 @@ function useToken(token) {
 async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
   try {
     const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
-    const doorUrl = `${BASE_URL}/door.html?token=${doorToken}`;
     
     console.log('[알림톡] 발송 시도:', {
       phoneNumber,
       parkingUrl,
-      doorUrl,
-      SOLAPI_API_KEY: SOLAPI_API_KEY,
+      SOLAPI_API_KEY: SOLAPI_API_KEY ? '설정됨' : '미설정',
       SOLAPI_PFID: SOLAPI_PFID,
       SENDER_PHONE: SENDER_PHONE
     });
@@ -285,15 +283,13 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           variables: {
             "#{customerName}": "고객님",
             "#{parkingUrl}": parkingUrl,
-            "#{doorUrl}": doorUrl,
+            "#{doorUrl}": "현재 지원되지 않음",
             "#{checkIn}": new Date().toLocaleDateString('ko-KR'),
             "#{checkOut}": new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('ko-KR')
           }
         }
       }
     };
-
-    console.log('[알림톡] 요청 데이터:', JSON.stringify(messageData, null, 2));
 
     const headers = getAuthHeader();
     console.log('[알림톡] 요청 헤더:', headers);
@@ -302,27 +298,14 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
       method: 'post',
       url: 'https://api.solapi.com/messages/v4/send',
       headers: headers,
-      data: messageData,
-      validateStatus: false
-    });
-    
-    console.log('[알림톡] API 응답:', {
-      status: response.status,
-      data: response.data
+      data: messageData
     });
 
-    if (response.status !== 200) {
-      throw new Error(`API 응답 오류: ${response.status} - ${JSON.stringify(response.data)}`);
-    }
-
+    console.log('[알림톡] 발송 성공:', response.data);
     return true;
   } catch (error) {
-    console.error('[알림톡] 발송 실패:', {
-      message: error.message,
-      response: error.response?.data,
-      config: error.config
-    });
-    throw error; // 에러를 상위로 전파하여 클라이언트에 전달
+    console.error('[알림톡] 발송 실패:', error.response?.data || error.message);
+    return false;
   }
 }
 
@@ -455,12 +438,13 @@ app.post('/api/tokens/validate', async (req, res) => {
 });
 
 // 토큰 생성 API 엔드포인트
-app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
+app.post('/api/generate-tokens', async (req, res) => {
   try {
     const { phoneNumber } = req.body;
-    console.log('[토큰 생성] 요청:', { phoneNumber }); // 디버깅 로그 추가
-    
+    console.log('[토큰 생성] 요청 받음:', { phoneNumber });
+
     if (!phoneNumber) {
+      console.log('[토큰 생성] 전화번호 누락');
       return res.status(400).json({
         success: false,
         error: '전화번호는 필수입니다.'
@@ -469,37 +453,60 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
 
     // 주차장 토큰 생성
     const parkingToken = generateToken();
-    console.log('[토큰 생성] 주차장 토큰:', parkingToken); // 디버깅 로그 추가
-    await saveToken(parkingToken, phoneNumber, 'parking', 24);
+    console.log('[토큰 생성] 주차장 토큰 생성됨:', parkingToken);
 
-    // 현관문 토큰 생성
-    const doorToken = generateToken();
-    console.log('[토큰 생성] 현관문 토큰:', doorToken); // 디버깅 로그 추가
-    await saveToken(doorToken, phoneNumber, 'door', 24);
+    // 토큰 저장
+    const timestamp = new Date();
+    const tokenData = {
+      phoneNumber,
+      type: 'parking',
+      createdAt: timestamp,
+      expiryHours: 24,
+      useCount: 0,
+      lastUsed: null,
+      maxUses: 10
+    };
+    
+    // 토큰 데이터 저장
+    tokens.set(parkingToken, tokenData);
+    
+    // 히스토리에 기록
+    const historyEntry = {
+      token: parkingToken,
+      phoneNumber,
+      createdAt: timestamp,
+      url: `${BASE_URL}/parking.html?token=${parkingToken}`,
+      status: 'active',
+      useCount: 0,
+      lastUsed: null
+    };
+    tokenHistory.set(parkingToken, historyEntry);
 
     try {
       // 알림톡 발송
-      await sendKakaoNotification(phoneNumber, parkingToken, doorToken);
-      console.log('[토큰 생성] 알림톡 발송 성공'); // 디버깅 로그 추가
+      const notificationSent = await sendKakaoNotification(phoneNumber, parkingToken, null);
+      console.log('[토큰 생성] 알림톡 발송 결과:', notificationSent);
 
+      const response = {
+        success: true,
+        parkingUrl: `/parking.html?token=${parkingToken}`,
+        message: notificationSent ? 
+          '토큰이 생성되었으며 알림톡이 발송되었습니다.' : 
+          '토큰이 생성되었으나 알림톡 발송에 실패했습니다. URL을 직접 복사해주세요.'
+      };
+
+      console.log('[토큰 생성] 응답:', response);
+      res.json(response);
+    } catch (error) {
+      console.error('[토큰 생성] 알림톡 발송 중 에러:', error);
       res.json({
         success: true,
         parkingUrl: `/parking.html?token=${parkingToken}`,
-        doorUrl: `/door.html?token=${doorToken}`,
-        message: '토큰이 생성되었으며 알림톡이 발송되었습니다.'
-      });
-    } catch (notificationError) {
-      console.error('[토큰 생성] 알림톡 발송 실패:', notificationError);
-      
-      res.json({
-        success: true,
-        parkingUrl: `/parking.html?token=${parkingToken}`,
-        doorUrl: `/door.html?token=${doorToken}`,
         message: '토큰이 생성되었으나 알림톡 발송에 실패했습니다. URL을 직접 복사해주세요.'
       });
     }
   } catch (error) {
-    console.error('[토큰 생성] 실패:', error);
+    console.error('[토큰 생성] 치명적 에러:', error);
     res.status(500).json({
       success: false,
       error: '토큰 생성에 실패했습니다.'

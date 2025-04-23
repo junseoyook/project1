@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         
         const phoneNumber = document.getElementById('phoneNumber').value;
+        console.log('전화번호 입력값:', phoneNumber);
 
         if (!phoneNumber) {
             showError('전화번호를 입력해주세요.');
@@ -30,18 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    phoneNumber: phoneNumber
-                })
+                body: JSON.stringify({ phoneNumber })
             });
 
             const data = await response.json();
-            console.log('서버 응답:', data); // 디버깅용 로그
+            console.log('서버 응답:', data);
             
             if (data.success) {
                 showSuccess(data.message);
                 
-                // 생성된 URL들을 화면에 표시
+                // 생성된 URL을 화면에 표시
                 const urlsContainer = document.getElementById('generatedUrls');
                 urlsContainer.innerHTML = `
                     <div class="url-item">
@@ -51,20 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="copy-btn" onclick="copyToClipboard('${data.parkingUrl}')">복사</button>
                         </div>
                     </div>
-                    <div class="url-item">
-                        <p><strong>현관문 리모컨:</strong></p>
-                        <div class="url-box">
-                            <span class="url-text">${data.doorUrl}</span>
-                            <button class="copy-btn" onclick="copyToClipboard('${data.doorUrl}')">복사</button>
-                        </div>
-                    </div>
                 `;
                 urlsContainer.style.display = 'block';
             } else {
                 showError(data.error || '토큰 생성에 실패했습니다.');
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('에러:', error);
             showError('서버 오류가 발생했습니다.');
         }
     }
@@ -72,14 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSuccess(message) {
         const statusDiv = document.getElementById('status');
         statusDiv.textContent = message;
-        statusDiv.className = 'mt-3 success';
+        statusDiv.className = 'mt-3 alert alert-success';
         statusDiv.style.display = 'block';
     }
 
     function showError(message) {
         const statusDiv = document.getElementById('status');
         statusDiv.textContent = message;
-        statusDiv.className = 'mt-3 error';
+        statusDiv.className = 'mt-3 alert alert-danger';
         statusDiv.style.display = 'block';
     }
 });
