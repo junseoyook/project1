@@ -384,6 +384,57 @@ app.get('/api/token-history', (req, res) => {
   }
 });
 
+// 대시보드 통계 API 엔드포인트
+app.get('/api/dashboard-stats', (req, res) => {
+    try {
+        // 현재 주차 현황 계산
+        let currentParking = 0;
+        let todayEntries = 0;
+        let todayExits = 0;
+        const recentEntries = [];
+        
+        // 토큰 데이터로부터 통계 계산
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        Array.from(tokens.entries()).forEach(([token, data]) => {
+            if (data.lastUsed && data.lastUsed >= today) {
+                if (data.useCount > 0) {
+                    currentParking++;
+                    todayEntries++;
+                }
+                
+                // 최근 입출차 기록에 추가
+                recentEntries.push({
+                    timestamp: data.lastUsed,
+                    phoneNumber: data.phoneNumber,
+                    type: '입차',
+                    status: '완료'
+                });
+            }
+        });
+
+        // 최근 기록 정렬 (최신순)
+        recentEntries.sort((a, b) => b.timestamp - a.timestamp);
+
+        res.json({
+            success: true,
+            stats: {
+                currentParking,
+                todayEntries,
+                todayExits
+            },
+            recentEntries: recentEntries.slice(0, 10) // 최근 10개만 반환
+        });
+    } catch (error) {
+        console.error('대시보드 통계 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            error: '대시보드 통계 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`서버 실행 중: 포트 ${PORT}`);
