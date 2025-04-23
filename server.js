@@ -390,41 +390,41 @@ app.get('/customer/:token', (req, res) => {
     }
 });
 
-// 토큰 검증 API 엔드포인트 수정
-app.get('/api/validate-token/:token', async (req, res) => {
-    const { token } = req.params;
+// 토큰 검증 API 엔드포인트
+app.post('/api/tokens/validate', async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: '토큰이 제공되지 않았습니다.'
+      });
+    }
+
     const validation = validateToken(token);
-    const tokenData = tokens.get(token);
     
     if (validation.isValid) {
-        if (tokenData.type === 'door') {
-            try {
-                const result = await controlDoor('open');
-                useToken(token);
-                res.json({ 
-                    success: true, 
-                    message: '현관문이 열렸습니다.',
-                    remainingUses: tokenData.maxUses - tokenData.useCount
-                });
-            } catch (error) {
-                res.status(500).json({ 
-                    success: false, 
-                    error: '현관문 제어 중 오류가 발생했습니다.' 
-                });
-            }
-        } else {
-            useToken(token);
-            res.json({ 
-                success: true,
-                remainingUses: tokenData.maxUses - tokenData.useCount
-            });
-        }
+      res.json({
+        success: true,
+        valid: true,
+        remainingUses: validation.remainingUses,
+        expiresIn: validation.expiresIn
+      });
     } else {
-        res.status(400).json({ 
-            success: false, 
-            error: validation.reason 
-        });
+      res.status(400).json({
+        success: false,
+        valid: false,
+        message: validation.reason
+      });
     }
+  } catch (error) {
+    console.error('토큰 검증 실패:', error);
+    res.status(500).json({
+      success: false,
+      valid: false,
+      message: '토큰 검증 중 오류가 발생했습니다.'
+    });
+  }
 });
 
 // 토큰 생성 API 엔드포인트
@@ -660,6 +660,24 @@ app.post('/api/reservation/tokens', validateApiKey, async (req, res) => {
       error: '토큰 생성 중 오류가 발생했습니다: ' + error.message
     });
   }
+});
+
+// 주차장 리모컨 페이지 라우트
+app.get('/parking.html', (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'parking.html'));
+});
+
+// 현관문 리모컨 페이지 라우트
+app.get('/door.html', (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'door.html'));
 });
 
 const PORT = process.env.PORT || 8080;
