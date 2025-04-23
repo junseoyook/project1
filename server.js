@@ -262,10 +262,13 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
     const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
     const doorUrl = `${BASE_URL}/door.html?token=${doorToken}`;
     
-    console.log('알림톡 발송 시도:', {
+    console.log('[알림톡] 발송 시도:', {
       phoneNumber,
       parkingUrl,
-      doorUrl
+      doorUrl,
+      SOLAPI_API_KEY: SOLAPI_API_KEY,
+      SOLAPI_PFID: SOLAPI_PFID,
+      SENDER_PHONE: SENDER_PHONE
     });
 
     const messageData = {
@@ -277,24 +280,41 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
             "#{customerName}": "고객님",
-            "#{parking Url}": parkingUrl,    // 주차장 URL
-            "#{entry Url}": doorUrl,         // 현관문 URL
-            "#{checkInTime}": "발급 시점",
-            "#{checkOutTime}": "24시간"
+            "#{parkingUrl}": parkingUrl,
+            "#{doorUrl}": doorUrl,
+            "#{checkIn}": new Date().toLocaleDateString('ko-KR'),
+            "#{checkOut}": new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('ko-KR')
           }
         }
       }
     };
 
-    console.log('알림톡 요청 데이터:', JSON.stringify(messageData, null, 2));
+    console.log('[알림톡] 요청 데이터:', JSON.stringify(messageData, null, 2));
 
     const headers = getAuthHeader();
-    const response = await axios.post('https://api.solapi.com/messages/v4/send', messageData, { headers });
+    console.log('[알림톡] 요청 헤더:', headers);
+
+    const response = await axios.post('https://api.solapi.com/messages/v4/send', messageData, { 
+      headers,
+      validateStatus: false // 모든 HTTP 상태 코드에 대한 응답을 받기 위해
+    });
     
-    console.log('알림톡 발송 성공:', response.data);
+    console.log('[알림톡] API 응답:', {
+      status: response.status,
+      data: response.data
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`API 응답 오류: ${response.status} - ${JSON.stringify(response.data)}`);
+    }
+
     return true;
   } catch (error) {
-    console.error('알림톡 발송 실패:', error.response?.data || error.message);
+    console.error('[알림톡] 발송 실패:', {
+      message: error.message,
+      response: error.response?.data,
+      config: error.config
+    });
     return false;
   }
 }

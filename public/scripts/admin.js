@@ -8,78 +8,87 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultMessage = document.getElementById('resultMessage');
 
     if (tokenForm) {
-        tokenForm.addEventListener('submit', handleTokenGeneration);
+        tokenForm.addEventListener('submit', generateToken);
     }
 
     // 초기 히스토리 로드
     loadTokenHistory();
 
-    async function handleTokenGeneration(e) {
-        e.preventDefault();
+    async function generateToken(event) {
+        event.preventDefault();
         
-        const phoneInput = document.getElementById('phoneNumber');
-        const submitButton = document.getElementById('generateToken');
-        const phoneNumber = phoneInput.value.replace(/[^0-9]/g, '');
-        const expiryHours = document.getElementById('expiryHours').value;
-        
-        if (!phoneNumber || phoneNumber.length !== 11) {
-            showMessage('올바른 휴대폰 번호를 입력해주세요.', 'danger');
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        const checkInDate = document.getElementById('checkInDate').value;
+        const checkOutDate = document.getElementById('checkOutDate').value;
+
+        if (!phoneNumber || !checkInDate || !checkOutDate) {
+            showError('모든 필드를 입력해주세요.');
             return;
         }
 
         try {
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>처리 중...';
-            
-            // 두 개의 URL을 한 번에 생성
-            const response = await fetch('/api/generate-tokens', {
+            const response = await fetch('/api/reservation/tokens', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': API_KEY
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     phoneNumber,
-                    expiryHours
+                    checkInDate,
+                    checkOutDate
                 })
             });
 
             const data = await response.json();
-
+            
             if (data.success) {
-                // 생성된 URL 표시
-                const generatedUrls = document.getElementById('generatedUrls');
-                const parkingUrl = document.getElementById('parkingUrl');
-                const doorUrl = document.getElementById('doorUrl');
+                showSuccess('토큰이 생성되었으며 알림톡이 발송되었습니다.');
                 
-                if (parkingUrl) parkingUrl.value = window.location.origin + data.parkingUrl;
-                if (doorUrl) doorUrl.value = window.location.origin + data.doorUrl;
-                if (generatedUrls) generatedUrls.style.display = 'block';
-                
-                showMessage(data.message || '토큰이 생성되었으며 알림톡이 발송되었습니다.', 'success');
-                phoneInput.value = '';
-                
-                // 토큰 생성 후 히스토리 새로고침
-                loadTokenHistory();
+                // 생성된 URL들을 화면에 표시
+                const urlsContainer = document.getElementById('generatedUrls');
+                urlsContainer.innerHTML = `
+                    <div class="url-item">
+                        <p><strong>주차장 리모컨:</strong></p>
+                        <div class="url-box">
+                            <span class="url-text">${data.data.parkingUrl}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${data.data.parkingUrl}')">복사</button>
+                        </div>
+                    </div>
+                    <div class="url-item">
+                        <p><strong>현관문 리모컨:</strong></p>
+                        <div class="url-box">
+                            <span class="url-text">${data.data.doorUrl}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${data.data.doorUrl}')">복사</button>
+                        </div>
+                    </div>
+                `;
+                urlsContainer.style.display = 'block';
             } else {
-                throw new Error(data.error || '토큰 생성에 실패했습니다.');
+                showError(data.error || '토큰 생성에 실패했습니다.');
             }
         } catch (error) {
-            showMessage(error.message, 'danger');
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'URL 생성 및 알림톡 발송';
+            console.error('Error:', error);
+            showError('서버 오류가 발생했습니다.');
         }
     }
 
-    function showMessage(message, type) {
-        resultMessage.textContent = message;
-        resultMessage.className = `alert alert-${type} mt-3`;
-        resultMessage.style.display = 'block';
-        
-        // 3초 후 메시지 숨기기
+    function showSuccess(message) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = message;
+        statusDiv.className = 'success';
         setTimeout(() => {
-            resultMessage.style.display = 'none';
+            statusDiv.textContent = '';
+            statusDiv.className = '';
+        }, 3000);
+    }
+
+    function showError(message) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = message;
+        statusDiv.className = 'error';
+        setTimeout(() => {
+            statusDiv.textContent = '';
+            statusDiv.className = '';
         }, 3000);
     }
 });
