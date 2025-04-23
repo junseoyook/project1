@@ -18,24 +18,22 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         
         const phoneNumber = document.getElementById('phoneNumber').value;
-        const checkInDate = document.getElementById('checkInDate').value;
-        const checkOutDate = document.getElementById('checkOutDate').value;
 
-        if (!phoneNumber || !checkInDate || !checkOutDate) {
-            showError('모든 필드를 입력해주세요.');
+        if (!phoneNumber) {
+            showError('전화번호를 입력해주세요.');
             return;
         }
 
         try {
-            const response = await fetch('/api/reservation/tokens', {
+            const response = await fetch('/api/generate-tokens', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-api-key': API_KEY
                 },
                 body: JSON.stringify({
                     phoneNumber,
-                    checkInDate,
-                    checkOutDate
+                    expiryHours: 24 // 기본 24시간으로 설정
                 })
             });
 
@@ -50,15 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="url-item">
                         <p><strong>주차장 리모컨:</strong></p>
                         <div class="url-box">
-                            <span class="url-text">${data.data.parkingUrl}</span>
-                            <button class="copy-btn" onclick="copyToClipboard('${data.data.parkingUrl}')">복사</button>
+                            <span class="url-text">${data.parkingUrl}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${data.parkingUrl}')">복사</button>
                         </div>
                     </div>
                     <div class="url-item">
                         <p><strong>현관문 리모컨:</strong></p>
                         <div class="url-box">
-                            <span class="url-text">${data.data.doorUrl}</span>
-                            <button class="copy-btn" onclick="copyToClipboard('${data.data.doorUrl}')">복사</button>
+                            <span class="url-text">${data.doorUrl}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${data.doorUrl}')">복사</button>
                         </div>
                     </div>
                 `;
