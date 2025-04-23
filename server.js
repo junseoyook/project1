@@ -387,44 +387,54 @@ app.get('/api/token-history', (req, res) => {
 // 대시보드 통계 API 엔드포인트
 app.get('/api/dashboard-stats', (req, res) => {
     try {
-        // 현재 주차 현황 계산
-        let currentParking = 0;
-        let todayEntries = 0;
-        let todayExits = 0;
-        const recentEntries = [];
-        
-        // 토큰 데이터로부터 통계 계산
+        // 현재 시간 기준으로 통계 계산
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
+        let todayTokens = 0;
+        let activeTokens = 0;
+        let expiredTokens = 0;
+        const tokenHistory = [];
+
+        // 토큰 데이터 분석
         Array.from(tokens.entries()).forEach(([token, data]) => {
-            if (data.lastUsed && data.lastUsed >= today) {
-                if (data.useCount > 0) {
-                    currentParking++;
-                    todayEntries++;
-                }
-                
-                // 최근 입출차 기록에 추가
-                recentEntries.push({
-                    timestamp: data.lastUsed,
-                    phoneNumber: data.phoneNumber,
-                    type: '입차',
-                    status: '완료'
-                });
+            const tokenUrl = `${BASE_URL}/customer/${token}`;
+            const validation = validateToken(token);
+            
+            // 오늘 생성된 토큰 카운트
+            if (data.createdAt >= today) {
+                todayTokens++;
             }
+
+            // 활성/만료 토큰 카운트
+            if (validation.isValid) {
+                activeTokens++;
+            } else {
+                expiredTokens++;
+            }
+
+            // 토큰 히스토리에 추가
+            tokenHistory.push({
+                timestamp: data.createdAt,
+                phoneNumber: data.phoneNumber,
+                url: tokenUrl,
+                status: validation.isValid ? '활성' : '만료',
+                usageCount: data.useCount,
+                lastUsed: data.lastUsed
+            });
         });
 
-        // 최근 기록 정렬 (최신순)
-        recentEntries.sort((a, b) => b.timestamp - a.timestamp);
+        // 최근 순으로 정렬
+        tokenHistory.sort((a, b) => b.timestamp - a.timestamp);
 
         res.json({
             success: true,
             stats: {
-                currentParking,
-                todayEntries,
-                todayExits
+                todayTokens,
+                activeTokens,
+                expiredTokens
             },
-            recentEntries: recentEntries.slice(0, 10) // 최근 10개만 반환
+            recentEntries: tokenHistory.slice(0, 10) // 최근 10개만 반환
         });
     } catch (error) {
         console.error('대시보드 통계 조회 실패:', error);

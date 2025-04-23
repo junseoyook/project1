@@ -177,33 +177,35 @@
             <div class="container">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <h3>현재 주차 현황</h3>
-                        <p class="stat-number" id="currentParking">0</p>
-                        <p class="stat-label">대 주차 중</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>오늘의 입차</h3>
-                        <p class="stat-number" id="todayEntries">0</p>
+                        <h3>오늘 발송된 URL</h3>
+                        <p class="stat-number" id="todayTokens">0</p>
                         <p class="stat-label">건</p>
                     </div>
                     <div class="stat-card">
-                        <h3>오늘의 출차</h3>
-                        <p class="stat-number" id="todayExits">0</p>
+                        <h3>활성 토큰</h3>
+                        <p class="stat-number" id="activeTokens">0</p>
+                        <p class="stat-label">건</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>만료된 토큰</h3>
+                        <p class="stat-number" id="expiredTokens">0</p>
                         <p class="stat-label">건</p>
                     </div>
                 </div>
 
                 <div class="recent-entries">
-                    <h2>최근 입출차 기록
+                    <h2>URL 발송 현황
                         <button onclick="refreshDashboard()" class="refresh-button">새로고침</button>
                     </h2>
                     <table class="entries-table">
                         <thead>
                             <tr>
-                                <th>시간</th>
-                                <th>차량번호</th>
-                                <th>구분</th>
+                                <th>발송시간</th>
+                                <th>전화번호</th>
+                                <th>URL</th>
                                 <th>상태</th>
+                                <th>사용횟수</th>
+                                <th>마지막 사용</th>
                             </tr>
                         </thead>
                         <tbody id="recentEntriesBody">
@@ -306,9 +308,9 @@
 
                 if (data.success) {
                     // 통계 업데이트
-                    document.getElementById('currentParking').textContent = data.stats.currentParking;
-                    document.getElementById('todayEntries').textContent = data.stats.todayEntries;
-                    document.getElementById('todayExits').textContent = data.stats.todayExits;
+                    document.getElementById('todayTokens').textContent = data.stats.todayTokens;
+                    document.getElementById('activeTokens').textContent = data.stats.activeTokens;
+                    document.getElementById('expiredTokens').textContent = data.stats.expiredTokens;
 
                     // 최근 기록 업데이트
                     const recentEntriesBody = document.getElementById('recentEntriesBody');
@@ -318,13 +320,15 @@
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>${formatTime(entry.timestamp)}</td>
-                            <td>${entry.plateNumber}</td>
-                            <td>${entry.type}</td>
+                            <td>${entry.phoneNumber}</td>
+                            <td>${entry.url}</td>
                             <td>
-                                <span class="status-badge ${entry.type === '입차' ? 'status-entry' : 'status-exit'}">
+                                <span class="status-badge ${entry.status === '성공' ? 'status-entry' : 'status-exit'}">
                                     ${entry.status}
                                 </span>
                             </td>
+                            <td>${entry.usageCount}</td>
+                            <td>${entry.lastUsed ? formatTime(entry.lastUsed) : '사용 없음'}</td>
                         `;
                         recentEntriesBody.appendChild(tr);
                     });
