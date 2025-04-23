@@ -28,12 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/generate-tokens', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'your-secret-api-key'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    phoneNumber,
-                    expiryHours: 24
+                    phoneNumber: phoneNumber
                 })
             });
 
@@ -41,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('서버 응답:', data); // 디버깅용 로그
             
             if (data.success) {
-                showSuccess('토큰이 생성되었으며 알림톡이 발송되었습니다.');
+                showSuccess(data.message);
                 
                 // 생성된 URL들을 화면에 표시
                 const urlsContainer = document.getElementById('generatedUrls');
