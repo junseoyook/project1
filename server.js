@@ -273,8 +273,8 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
             "#{customerName}": "고객님",
-            "#{parkingUrl}": parkingUrl,
-            "#{doorUrl}": doorUrl,
+            "#{parking Url}": parkingUrl,
+            "#{entry Url}": doorUrl,
             "#{checkInTime}": "발급 시점",
             "#{checkOutTime}": "24시간"
           }
