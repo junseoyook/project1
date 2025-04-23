@@ -154,15 +154,13 @@ async function sendKakaoNotification(phoneNumber, token) {
       message: {
         to: phoneNumber,
         from: SENDER_PHONE,
-        text: "[전주호텔 북 앤 타이프] 주차장 출입 안내",
         kakaoOptions: {
           pfId: SOLAPI_PFID,
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            "#{고객명}": "고객님",
+            "#{customerName}": "고객님",
             "#{parking Url}": token.url,
-            "#{entry Url}": token.url,
-            "~": "24시간"
+            "#{entry Url}": token.url
           }
         }
       }
@@ -171,11 +169,6 @@ async function sendKakaoNotification(phoneNumber, token) {
     console.log('알림톡 요청 데이터:', JSON.stringify(messageData, null, 2));
 
     const headers = getAuthHeader();
-    console.log('요청 헤더:', {
-      Authorization: headers.Authorization.substring(0, 50) + '...',
-      'Content-Type': headers['Content-Type']
-    });
-
     const response = await axios({
       method: 'post',
       url: 'https://api.solapi.com/messages/v4/send',
@@ -285,6 +278,55 @@ app.post('/api/generate-token', async (req, res) => {
       error: '토큰 생성 중 오류가 발생했습니다: ' + error.message
     });
   }
+});
+
+// 고객 페이지 라우트 핸들러 추가
+app.get('/customer/:token', (req, res) => {
+  const { token } = req.params;
+  const validation = validateToken(token);
+  
+  if (!validation.isValid) {
+    res.status(400).send(`
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>오류</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background-color: #f5f5f5;
+            }
+            .error-container {
+              text-align: center;
+              padding: 20px;
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .error-message {
+              color: #dc3545;
+              margin-bottom: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="error-container">
+            <div class="error-message">${validation.reason}</div>
+          </div>
+        </body>
+      </html>
+    `);
+    return;
+  }
+
+  // 토큰이 유효하면 customer.html 페이지 제공
+  res.sendFile('customer.html', { root: './public' });
 });
 
 const PORT = process.env.PORT || 8080;
