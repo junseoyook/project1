@@ -78,12 +78,20 @@ function getAuthHeader() {
   const salt = crypto.randomBytes(32).toString('hex');
   
   try {
+    console.log('인증 정보 생성 시도:', {
+      apiKey: SOLAPI_API_KEY,
+      date,
+      salt: salt.substring(0, 10) + '...'
+    });
+
     const signature = crypto
       .createHmac('sha256', SOLAPI_API_SECRET)
       .update(date + salt)
       .digest('hex');
 
     const authorization = `HMAC-SHA256 apiKey=${SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`;
+
+    console.log('생성된 Authorization:', authorization.substring(0, 50) + '...');
 
     return {
       'Authorization': authorization,
@@ -159,22 +167,18 @@ async function sendKakaoNotification(phoneNumber, token) {
       }
     };
 
-    console.log('알림톡 발송 시작:', {
-      phoneNumber,
-      tokenUrl: token.url,
-      messageData: JSON.stringify(messageData, null, 2)
-    });
+    console.log('알림톡 요청 데이터:', JSON.stringify(messageData, null, 2));
 
     const headers = getAuthHeader();
-    console.log('API 인증 정보:', {
-      apiKey: SOLAPI_API_KEY,
-      pfId: SOLAPI_PFID
+    console.log('요청 헤더:', {
+      Authorization: headers.Authorization.substring(0, 50) + '...',
+      'Content-Type': headers['Content-Type']
     });
 
     const response = await axios({
       method: 'post',
       url: 'https://api.solapi.com/messages/v4/send',
-      headers: headers,
+      headers,
       data: messageData,
       timeout: 10000
     });
