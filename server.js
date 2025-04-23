@@ -29,9 +29,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public'));
 
 // 정적 파일 제공 설정
-app.use(express.static('public', {
-  index: false // index.html을 직접 처리하기 위해 비활성화
-}));
+app.use(express.static('public'));
 
 // 메인 페이지 라우트
 app.get('/', (req, res) => {
@@ -94,7 +92,7 @@ const tokens = new Map();
 // 토큰 히스토리 저장소
 const tokenHistory = new Map();
 
-// 환경변수에 API 키 추가
+// API 키 설정
 const API_KEY = process.env.API_KEY || 'your-secret-api-key';
 
 // API 키 검증 미들웨어
