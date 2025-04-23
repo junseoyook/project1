@@ -159,9 +159,10 @@ async function sendKakaoNotification(phoneNumber, token) {
           pfId: SOLAPI_PFID,
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            "고객명": "고객",
-            "주차URL": token.url,
-            "현관URL": token.url
+            "#{고객명}": "고객님",
+            "#{parking Url}": token.url,
+            "#{entry Url}": token.url,
+            "~": "24시간"
           }
         }
       }
