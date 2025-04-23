@@ -250,12 +250,13 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
         from: SENDER_PHONE,
         kakaoOptions: {
           pfId: SOLAPI_PFID,
-          templateId: 'your-template-id', // 실제 템플릿 ID로 변경 필요
+          templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            '#{parkingUrl}': parkingUrl,
-            '#{doorUrl}': doorUrl,
-            '#{parkingDescription}': '주차장 차단기',
-            '#{doorDescription}': '현관문'
+            "#{customerName}": "고객님",
+            "#{parkingUrl}": parkingUrl,
+            "#{doorUrl}": doorUrl,
+            "#{checkInTime}": "발급 시점",
+            "#{checkOutTime}": "24시간"
           }
         }
       }
