@@ -237,22 +237,50 @@
         async function validateToken() {
             token = getTokenFromUrl();
             if (!token) {
-                alert('유효하지 않은 접근입니다.');
-                window.location.href = '/';
+                showError('토큰이 없습니다. 올바른 링크로 접근해주세요.');
                 return false;
             }
 
             try {
-                const response = await fetch(`/api/tokens/${token}`);
+                const response = await fetch(`/api/tokens/validate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token })
+                });
+
                 if (!response.ok) {
-                    throw new Error('토큰이 유효하지 않습니다.');
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || '토큰이 유효하지 않습니다.');
                 }
+
+                const data = await response.json();
+                if (!data.valid) {
+                    throw new Error(data.message || '토큰이 만료되었거나 사용 횟수를 초과했습니다.');
+                }
+
                 return true;
             } catch (error) {
-                alert(error.message);
-                window.location.href = '/';
+                showError(error.message);
                 return false;
             }
+        }
+
+        // 에러 메시지 표시
+        function showError(message) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.style.color = '#FF3B30';
+            statusMessage.style.background = 'rgba(255, 59, 48, 0.1)';
+            
+            // 버튼 비활성화
+            const buttons = document.querySelectorAll('.btn-control');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // 상태 표시등 업데이트
+            const statusLed = document.getElementById('statusLed');
+            statusLed.className = 'status-indicator';
         }
 
         // 연결 상태 확인
