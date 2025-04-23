@@ -239,43 +239,36 @@ function useToken(token) {
 }
 
 // 알림톡 발송 함수
-async function sendKakaoNotification(phoneNumber, token, type) {
+async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
   try {
-    const tokenUrl = `${BASE_URL}/customer/${token}`;
+    const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
+    const doorUrl = `${BASE_URL}/door.html?token=${doorToken}`;
+    
     const messageData = {
       message: {
         to: phoneNumber,
         from: SENDER_PHONE,
         kakaoOptions: {
           pfId: SOLAPI_PFID,
-          templateId: type === 'door' ? 
-            "KA01TP250418063541272b3uS4NHhfLo" : // 현관문 템플릿
-            "KA01TP250418063541272b3uS4NHhfLo",  // 주차장 템플릿
+          templateId: 'your-template-id', // 실제 템플릿 ID로 변경 필요
           variables: {
-            "#{customerName}": "고객님",
-            "#{parking Url}": tokenUrl,
-            "#{entry Url}": tokenUrl
+            '#{parkingUrl}': parkingUrl,
+            '#{doorUrl}': doorUrl,
+            '#{parkingDescription}': '주차장 차단기',
+            '#{doorDescription}': '현관문'
           }
         }
       }
     };
 
-    console.log('알림톡 요청 데이터:', JSON.stringify(messageData, null, 2));
-
     const headers = getAuthHeader();
-    const response = await axios({
-      method: 'post',
-      url: 'https://api.solapi.com/messages/v4/send',
-      headers,
-      data: messageData,
-      timeout: 10000
-    });
-
-    console.log('Solapi 응답:', response.data);
-    return response.data;
+    const response = await axios.post('https://api.solapi.com/messages/v4/send', messageData, { headers });
+    
+    console.log('알림톡 발송 성공:', response.data);
+    return true;
   } catch (error) {
-    console.error('알림톡 발송 실패:', error);
-    throw error;
+    console.error('알림톡 발송 실패:', error.response?.data || error.message);
+    return false;
   }
 }
 
@@ -408,71 +401,45 @@ app.get('/api/validate-token/:token', async (req, res) => {
 });
 
 // 토큰 생성 API 엔드포인트
-app.post('/api/generate-token', async (req, res) => {
+app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
   try {
-    console.log('토큰 생성 요청 수신:', {
-      body: req.body,
-      headers: req.headers
-    });
-
-    const { phoneNumber, type = 'parking', expiryHours = '24' } = req.body;
+    const { phoneNumber, expiryHours } = req.body;
     
-    if (!phoneNumber) {
-      console.error('전화번호 누락');
-      return res.status(400).json({ 
-        success: false, 
-        error: '전화번호가 필요합니다.' 
-      });
-    }
-
-    if (!['parking', 'door'].includes(type)) {
+    if (!phoneNumber || !expiryHours) {
       return res.status(400).json({
         success: false,
-        error: '유효하지 않은 토큰 타입입니다.'
+        error: '전화번호와 만료 시간은 필수입니다.'
       });
     }
 
-    // 토큰 생성
-    const token = generateToken();
-    console.log('토큰 생성됨:', { token, type });
+    // 주차장 토큰 생성
+    const parkingToken = generateToken();
+    await saveToken(parkingToken, phoneNumber, 'parking', expiryHours);
 
-    try {
-      // 토큰 저장
-      await saveToken(token, phoneNumber, type, expiryHours);
-      console.log('토큰 저장 완료');
+    // 현관문 토큰 생성
+    const doorToken = generateToken();
+    await saveToken(doorToken, phoneNumber, 'door', expiryHours);
 
-      // 알림톡 발송
-      console.log('알림톡 발송 시도:', { phoneNumber, token, type });
-      const result = await sendKakaoNotification(phoneNumber, token, type);
-      console.log('알림톡 발송 결과:', result);
-
-      return res.json({
-        success: true,
-        message: '토큰이 생성되었으며 알림톡이 발송되었습니다.',
-        type,
-        expiresIn: `${expiryHours}시간`
-      });
-    } catch (innerError) {
-      console.error('토큰 처리 중 오류:', {
-        phase: innerError.phase || 'unknown',
-        error: innerError.message,
-        stack: innerError.stack
-      });
-      
+    // 알림톡 발송
+    const notificationSent = await sendKakaoNotification(phoneNumber, parkingToken, doorToken);
+    
+    if (!notificationSent) {
       return res.status(500).json({
         success: false,
-        error: '토큰 처리 중 오류가 발생했습니다: ' + innerError.message
+        error: '알림톡 발송에 실패했습니다.'
       });
     }
-  } catch (error) {
-    console.error('토큰 생성 실패:', {
-      error: error.message,
-      stack: error.stack
+
+    res.json({
+      success: true,
+      parkingUrl: `/parking.html?token=${parkingToken}`,
+      doorUrl: `/door.html?token=${doorToken}`
     });
-    
-    return res.status(500).json({
+  } catch (error) {
+    console.error('토큰 생성 실패:', error);
+    res.status(500).json({
       success: false,
-      error: '토큰 생성 중 오류가 발생했습니다: ' + error.message
+      error: '토큰 생성에 실패했습니다.'
     });
   }
 });
