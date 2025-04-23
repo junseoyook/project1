@@ -210,11 +210,28 @@ app.get('/api/validate-token/:token', (req, res) => {
 // 토큰 생성 API 엔드포인트
 app.post('/api/generate-token', async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
-    console.log('토큰 생성 요청:', { phoneNumber });
+    console.log('토큰 생성 요청 수신:', {
+      body: req.body,
+      headers: req.headers
+    });
 
+    const { phoneNumber } = req.body;
+    
     if (!phoneNumber) {
-      return res.status(400).json({ success: false, error: '전화번호가 필요합니다.' });
+      console.error('전화번호 누락');
+      return res.status(400).json({ 
+        success: false, 
+        error: '전화번호가 필요합니다.' 
+      });
+    }
+
+    // 환경변수 확인
+    if (!BASE_URL) {
+      console.error('BASE_URL 환경변수 누락');
+      return res.status(500).json({
+        success: false,
+        error: '서버 설정 오류가 발생했습니다.'
+      });
     }
 
     // 토큰 생성
@@ -222,22 +239,43 @@ app.post('/api/generate-token', async (req, res) => {
     const tokenUrl = `${BASE_URL}/customer/${token}`;
     console.log('토큰 생성됨:', { token, tokenUrl });
 
-    // 토큰 저장
-    await saveToken(token, phoneNumber);
+    try {
+      // 토큰 저장
+      await saveToken(token, phoneNumber);
+      console.log('토큰 저장 완료');
 
-    // 알림톡 발송
-    const result = await sendKakaoNotification(phoneNumber, { url: tokenUrl });
-    console.log('알림톡 발송 결과:', result);
+      // 알림톡 발송
+      console.log('알림톡 발송 시도:', { phoneNumber, tokenUrl });
+      const result = await sendKakaoNotification(phoneNumber, { url: tokenUrl });
+      console.log('알림톡 발송 결과:', result);
 
-    res.json({
-      success: true,
-      message: '토큰이 생성되었으며 알림톡이 발송되었습니다.',
-      expiresIn: `${TOKEN_EXPIRY_HOURS}시간`,
-      maxUses: MAX_TOKEN_USES
-    });
+      return res.json({
+        success: true,
+        message: '토큰이 생성되었으며 알림톡이 발송되었습니다.',
+        expiresIn: `${TOKEN_EXPIRY_HOURS}시간`,
+        maxUses: MAX_TOKEN_USES
+      });
+    } catch (innerError) {
+      console.error('토큰 처리 중 오류:', {
+        phase: innerError.phase || 'unknown',
+        error: innerError.message,
+        stack: innerError.stack,
+        response: innerError.response?.data
+      });
+      
+      return res.status(500).json({
+        success: false,
+        error: '토큰 처리 중 오류가 발생했습니다: ' + innerError.message
+      });
+    }
   } catch (error) {
-    console.error('토큰 생성 실패:', error);
-    res.status(500).json({
+    console.error('토큰 생성 실패:', {
+      error: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    
+    return res.status(500).json({
       success: false,
       error: '토큰 생성 중 오류가 발생했습니다: ' + error.message
     });

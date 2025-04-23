@@ -80,76 +80,76 @@
             <a href="#daily" class="nav-link" data-page="daily">일별 현황</a>
             <a href="#monthly" class="nav-link" data-page="monthly">월별 현황</a>
         </nav>
-    </div>
+            </div>
 
     <div class="main-content">
-        <div id="dashboard" class="page active">
+                <div id="dashboard" class="page active">
             <h2>대시보드</h2>
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">대시보드</h1>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">현재 주차 현황</h5>
-                            <p class="card-text display-4" id="currentParking">0</p>
-                            <p class="text-muted">대 주차 중</p>
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">대시보드</h1>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">현재 주차 현황</h5>
+                                    <p class="card-text display-4" id="currentParking">0</p>
+                                    <p class="text-muted">대 주차 중</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">오늘의 입차</h5>
+                                    <p class="card-text display-4" id="todayEntries">0</p>
+                                    <p class="text-muted">건</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">오늘의 출차</h5>
+                                    <p class="card-text display-4" id="todayExits">0</p>
+                                    <p class="text-muted">건</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">오늘의 입차</h5>
-                            <p class="card-text display-4" id="todayEntries">0</p>
-                            <p class="text-muted">건</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">오늘의 출차</h5>
-                            <p class="card-text display-4" id="todayExits">0</p>
-                            <p class="text-muted">건</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">최근 입출차 기록</h5>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>시간</th>
-                                            <th>차량번호</th>
-                                            <th>유형</th>
-                                            <th>상태</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="recentLogs">
-                                        <!-- 최근 로그가 여기에 동적으로 추가됩니다 -->
-                                    </tbody>
-                                </table>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">최근 입출차 기록</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>시간</th>
+                                                    <th>차량번호</th>
+                                                    <th>유형</th>
+                                                    <th>상태</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="recentLogs">
+                                                <!-- 최근 로그가 여기에 동적으로 추가됩니다 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
         <div id="token" class="page">
             <div class="card">
                 <div class="card-header">
                     <h2 class="text-center mb-0">토큰 관리</h2>
-                </div>
-                <div class="card-body">
+                    </div>
+                                <div class="card-body">
                     <form id="tokenForm">
                         <div class="form-group">
                             <label for="phoneNumber">고객 전화번호</label>
@@ -168,21 +168,21 @@
                     </form>
                     <div id="resultMessage" class="alert mt-3" style="display: none;"></div>
                 </div>
-            </div>
-        </div>
+                        </div>
+                    </div>
 
         <div id="daily" class="page">
             <h2>일별 현황</h2>
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">일별 현황</h1>
-            </div>
-        </div>
+                        </div>
+                    </div>
 
         <div id="monthly" class="page">
             <h2>월별 현황</h2>
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">월별 현황</h1>
-            </div>
+                </div>
         </div>
     </div>
 
