@@ -10,6 +10,9 @@ console.log('process.env:', {
   SOLAPI_API_KEY: process.env.SOLAPI_API_KEY || '없음',
   SOLAPI_API_SECRET: process.env.SOLAPI_API_SECRET ? '설정됨' : '없음',
   SOLAPI_PFID: process.env.SOLAPI_PFID || '없음',
+  SWITCHBOT_TOKEN: process.env.SWITCHBOT_TOKEN ? '설정됨' : '없음',
+  SWITCHBOT_SECRET: process.env.SWITCHBOT_SECRET ? '설정됨' : '없음',
+  SWITCHBOT_DEVICE_ID: process.env.SWITCHBOT_DEVICE_ID || '없음',
   BASE_URL: process.env.BASE_URL || '없음',
   NODE_ENV: process.env.NODE_ENV || '없음'
 });
@@ -24,6 +27,9 @@ const requiredEnvVars = {
   SOLAPI_API_KEY: process.env.SOLAPI_API_KEY,
   SOLAPI_API_SECRET: process.env.SOLAPI_API_SECRET,
   SOLAPI_PFID: process.env.SOLAPI_PFID,
+  SWITCHBOT_TOKEN: process.env.SWITCHBOT_TOKEN,
+  SWITCHBOT_SECRET: process.env.SWITCHBOT_SECRET,
+  SWITCHBOT_DEVICE_ID: process.env.SWITCHBOT_DEVICE_ID,
   BASE_URL: process.env.BASE_URL
 };
 
@@ -42,6 +48,9 @@ const {
   SOLAPI_API_KEY,
   SOLAPI_API_SECRET,
   SOLAPI_PFID,
+  SWITCHBOT_TOKEN,
+  SWITCHBOT_SECRET,
+  SWITCHBOT_DEVICE_ID,
   BASE_URL
 } = requiredEnvVars;
 
@@ -106,6 +115,47 @@ function getAuthHeader() {
   }
 }
 
+// SwitchBot API 헤더 생성 함수
+function getSwitchBotHeaders() {
+  const t = Date.now();
+  const nonce = crypto.randomBytes(16).toString('hex');
+  const data = SWITCHBOT_TOKEN + t + nonce;
+  const sign = crypto
+    .createHmac('sha256', SWITCHBOT_SECRET)
+    .update(Buffer.from(data, 'utf-8'))
+    .digest('base64');
+
+  return {
+    'Authorization': SWITCHBOT_TOKEN,
+    'sign': sign,
+    't': t.toString(),
+    'nonce': nonce,
+    'Content-Type': 'application/json'
+  };
+}
+
+// 현관문 제어 함수
+async function controlDoor(command) {
+  try {
+    const headers = getSwitchBotHeaders();
+    const response = await axios({
+      method: 'post',
+      url: `https://api.switch-bot.com/v1.1/devices/${SWITCHBOT_DEVICE_ID}/commands`,
+      headers,
+      data: {
+        command: command === 'open' ? 'press' : 'press',
+        parameter: 'default'
+      }
+    });
+
+    console.log('스위치봇 응답:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('현관문 제어 실패:', error);
+    throw error;
+  }
+}
+
 // 토큰 검증 함수
 function validateToken(token) {
   const tokenData = tokens.get(token);
@@ -129,13 +179,16 @@ function validateToken(token) {
 }
 
 // 토큰 저장 함수
-async function saveToken(token, phoneNumber) {
+async function saveToken(token, phoneNumber, type, expiryHours) {
   const timestamp = new Date();
   const tokenData = {
     phoneNumber,
+    type,
     createdAt: timestamp,
+    expiryHours: parseInt(expiryHours, 10),
     useCount: 0,
-    lastUsed: null
+    lastUsed: null,
+    maxUses: type === 'door' ? 5 : 10 // 현관문은 5회, 주차장은 10회로 제한
   };
   
   // 토큰 데이터 저장
@@ -153,7 +206,7 @@ async function saveToken(token, phoneNumber) {
   };
   tokenHistory.set(token, historyEntry);
   
-  console.log('토큰 저장됨:', { token, phoneNumber });
+  console.log('토큰 저장됨:', { token, phoneNumber, type, expiryHours });
 }
 
 // 토큰 사용 함수
@@ -176,19 +229,22 @@ function useToken(token) {
 }
 
 // 알림톡 발송 함수
-async function sendKakaoNotification(phoneNumber, token) {
+async function sendKakaoNotification(phoneNumber, token, type) {
   try {
+    const tokenUrl = `${BASE_URL}/customer/${token}`;
     const messageData = {
       message: {
         to: phoneNumber,
         from: SENDER_PHONE,
         kakaoOptions: {
           pfId: SOLAPI_PFID,
-          templateId: "KA01TP250418063541272b3uS4NHhfLo",
+          templateId: type === 'door' ? 
+            "KA01TP250418063541272b3uS4NHhfLo" : // 현관문 템플릿
+            "KA01TP250418063541272b3uS4NHhfLo",  // 주차장 템플릿
           variables: {
             "#{customerName}": "고객님",
-            "#{parking Url}": token.url,
-            "#{entry Url}": token.url
+            "#{parking Url}": tokenUrl,
+            "#{entry Url}": tokenUrl
           }
         }
       }
@@ -208,23 +264,36 @@ async function sendKakaoNotification(phoneNumber, token) {
     console.log('Solapi 응답:', response.data);
     return response.data;
   } catch (error) {
-    console.error('알림톡 발송 실패:', {
-      message: error.message,
-      response: error.response?.data,
-      requestData: error.config?.data
-    });
+    console.error('알림톡 발송 실패:', error);
     throw error;
   }
 }
 
 // 토큰 검증 API 엔드포인트
-app.get('/api/validate-token/:token', (req, res) => {
+app.get('/api/validate-token/:token', async (req, res) => {
   const { token } = req.params;
   const validation = validateToken(token);
   
   if (validation.isValid) {
-    useToken(token);
-    res.json({ success: true });
+    const tokenData = tokens.get(token);
+    
+    if (tokenData.type === 'door') {
+      try {
+        // 현관문 제어
+        await controlDoor('open');
+        useToken(token);
+        res.json({ success: true, message: '현관문이 열렸습니다.' });
+      } catch (error) {
+        res.status(500).json({ 
+          success: false, 
+          error: '현관문 제어 중 오류가 발생했습니다.' 
+        });
+      }
+    } else {
+      // 주차장 토큰
+      useToken(token);
+      res.json({ success: true });
+    }
   } else {
     res.status(400).json({ 
       success: false, 
@@ -241,7 +310,7 @@ app.post('/api/generate-token', async (req, res) => {
       headers: req.headers
     });
 
-    const { phoneNumber } = req.body;
+    const { phoneNumber, type = 'parking', expiryHours = '24' } = req.body;
     
     if (!phoneNumber) {
       console.error('전화번호 누락');
@@ -251,42 +320,38 @@ app.post('/api/generate-token', async (req, res) => {
       });
     }
 
-    // 환경변수 확인
-    if (!BASE_URL) {
-      console.error('BASE_URL 환경변수 누락');
-      return res.status(500).json({
+    if (!['parking', 'door'].includes(type)) {
+      return res.status(400).json({
         success: false,
-        error: '서버 설정 오류가 발생했습니다.'
+        error: '유효하지 않은 토큰 타입입니다.'
       });
     }
 
     // 토큰 생성
     const token = generateToken();
-    const tokenUrl = `${BASE_URL}/customer/${token}`;
-    console.log('토큰 생성됨:', { token, tokenUrl });
+    console.log('토큰 생성됨:', { token, type });
 
     try {
       // 토큰 저장
-      await saveToken(token, phoneNumber);
+      await saveToken(token, phoneNumber, type, expiryHours);
       console.log('토큰 저장 완료');
 
       // 알림톡 발송
-      console.log('알림톡 발송 시도:', { phoneNumber, tokenUrl });
-      const result = await sendKakaoNotification(phoneNumber, { url: tokenUrl });
+      console.log('알림톡 발송 시도:', { phoneNumber, token, type });
+      const result = await sendKakaoNotification(phoneNumber, token, type);
       console.log('알림톡 발송 결과:', result);
 
       return res.json({
         success: true,
         message: '토큰이 생성되었으며 알림톡이 발송되었습니다.',
-        expiresIn: `${TOKEN_EXPIRY_HOURS}시간`,
-        maxUses: MAX_TOKEN_USES
+        type,
+        expiresIn: `${expiryHours}시간`
       });
     } catch (innerError) {
       console.error('토큰 처리 중 오류:', {
         phase: innerError.phase || 'unknown',
         error: innerError.message,
-        stack: innerError.stack,
-        response: innerError.response?.data
+        stack: innerError.stack
       });
       
       return res.status(500).json({
@@ -297,8 +362,7 @@ app.post('/api/generate-token', async (req, res) => {
   } catch (error) {
     console.error('토큰 생성 실패:', {
       error: error.message,
-      stack: error.stack,
-      response: error.response?.data
+      stack: error.stack
     });
     
     return res.status(500).json({
@@ -453,4 +517,7 @@ app.listen(PORT, () => {
   console.log('SOLAPI_API_KEY:', process.env.SOLAPI_API_KEY ? '설정됨' : '미설정');
   console.log('SOLAPI_API_SECRET:', process.env.SOLAPI_API_SECRET ? '설정됨' : '미설정');
   console.log('SOLAPI_PFID:', process.env.SOLAPI_PFID ? '설정됨' : '미설정');
+  console.log('SWITCHBOT_TOKEN:', process.env.SWITCHBOT_TOKEN ? '설정됨' : '미설정');
+  console.log('SWITCHBOT_SECRET:', process.env.SWITCHBOT_SECRET ? '설정됨' : '미설정');
+  console.log('SWITCHBOT_DEVICE_ID:', process.env.SWITCHBOT_DEVICE_ID ? '설정됨' : '미설정');
 }); 
