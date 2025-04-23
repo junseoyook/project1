@@ -448,7 +448,8 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
     res.json({
       success: true,
       parkingUrl: `/parking.html?token=${parkingToken}`,
-      doorUrl: `/door.html?token=${doorToken}`
+      doorUrl: `/door.html?token=${doorToken}`,
+      message: '토큰이 생성되었으며 알림톡이 발송되었습니다.'
     });
   } catch (error) {
     console.error('토큰 생성 실패:', error);

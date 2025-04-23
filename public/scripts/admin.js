@@ -40,17 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ 
                     phoneNumber,
-                    expiryHours,
-                    urls: [
-                        {
-                            type: 'parking',
-                            description: '주차장 차단기'
-                        },
-                        {
-                            type: 'door',
-                            description: '현관문'
-                        }
-                    ]
+                    expiryHours
                 })
             });
 
@@ -62,11 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parkingUrl = document.getElementById('parkingUrl');
                 const doorUrl = document.getElementById('doorUrl');
                 
-                parkingUrl.value = window.location.origin + data.parkingUrl;
-                doorUrl.value = window.location.origin + data.doorUrl;
-                generatedUrls.style.display = 'block';
+                if (parkingUrl) parkingUrl.value = window.location.origin + data.parkingUrl;
+                if (doorUrl) doorUrl.value = window.location.origin + data.doorUrl;
+                if (generatedUrls) generatedUrls.style.display = 'block';
                 
-                showMessage('토큰이 생성되었으며 알림톡이 발송되었습니다.', 'success');
+                showMessage(data.message || '토큰이 생성되었으며 알림톡이 발송되었습니다.', 'success');
                 phoneInput.value = '';
                 
                 // 토큰 생성 후 히스토리 새로고침
