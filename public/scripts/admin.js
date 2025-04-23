@@ -29,15 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': API_KEY
+                    'x-api-key': 'your-secret-api-key'
                 },
                 body: JSON.stringify({
                     phoneNumber,
-                    expiryHours: 24 // 기본 24시간으로 설정
+                    expiryHours: 24
                 })
             });
 
             const data = await response.json();
+            console.log('서버 응답:', data); // 디버깅용 로그
             
             if (data.success) {
                 showSuccess('토큰이 생성되었으며 알림톡이 발송되었습니다.');
@@ -73,21 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSuccess(message) {
         const statusDiv = document.getElementById('status');
         statusDiv.textContent = message;
-        statusDiv.className = 'success';
-        setTimeout(() => {
-            statusDiv.textContent = '';
-            statusDiv.className = '';
-        }, 3000);
+        statusDiv.className = 'mt-3 success';
+        statusDiv.style.display = 'block';
     }
 
     function showError(message) {
         const statusDiv = document.getElementById('status');
         statusDiv.textContent = message;
-        statusDiv.className = 'error';
-        setTimeout(() => {
-            statusDiv.textContent = '';
-            statusDiv.className = '';
-        }, 3000);
+        statusDiv.className = 'mt-3 error';
+        statusDiv.style.display = 'block';
     }
 });
 
