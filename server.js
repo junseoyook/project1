@@ -285,8 +285,8 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
             "#{customerName}": "고객님",
-            "#{parking Url}": doorUrl,
-            "#{entry Url}": parkingUrl,
+            "#{pariking Url}": parkingUrl,
+            "#{entry Url}": doorUrl,
             "#{checkInTime}": new Date().toLocaleString('ko-KR'),
             "#{checkOutTime}": new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString('ko-KR')
           }
