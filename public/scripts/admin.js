@@ -31,40 +31,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': API_KEY
+                    'X-API-Key': API_KEY
                 },
                 body: JSON.stringify({ phoneNumber })
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || '서버 오류가 발생했습니다.');
-            }
-
             const data = await response.json();
-            console.log('서버 응답:', data);
             
             if (data.success) {
-                showSuccess(data.message);
+                // URL 결과 섹션 표시
+                document.getElementById('urlResult').style.display = 'block';
                 
-                // 생성된 URL을 화면에 표시
-                const urlsContainer = document.getElementById('generatedUrls');
-                urlsContainer.innerHTML = `
-                    <div class="url-item">
-                        <p><strong>주차장 리모컨:</strong></p>
-                        <div class="url-box">
-                            <span class="url-text">${data.parkingUrl}</span>
-                            <button class="copy-btn" onclick="copyToClipboard('${data.parkingUrl}')">복사</button>
-                        </div>
-                    </div>
-                `;
-                urlsContainer.style.display = 'block';
+                // URL 입력
+                document.getElementById('parkingUrl').value = data.parkingUrl;
+                document.getElementById('doorUrl').value = data.doorUrl;
+                
+                // 성공 메시지 표시
+                const alertDiv = document.querySelector('#urlResult .alert');
+                alertDiv.className = 'alert alert-success';
+                alertDiv.textContent = data.message;
             } else {
-                showError(data.error || '토큰 생성에 실패했습니다.');
+                throw new Error(data.error || '토큰 생성에 실패했습니다.');
             }
         } catch (error) {
-            console.error('에러:', error);
-            showError(error.message || '서버 오류가 발생했습니다.');
+            // 에러 메시지 표시
+            document.getElementById('urlResult').style.display = 'block';
+            const alertDiv = document.querySelector('#urlResult .alert');
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.textContent = error.message;
         }
     }
 
@@ -150,13 +144,18 @@ function formatPhoneNumber(phone) {
 }
 
 // URL 복사 함수
-async function copyToClipboard(text) {
-    try {
-        await navigator.clipboard.writeText(text);
-        showMessage('URL이 클립보드에 복사되었습니다.', 'success');
-    } catch (err) {
-        showMessage('URL 복사에 실패했습니다.', 'danger');
-    }
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    document.execCommand('copy');
+    
+    // 복사 성공 메시지 표시
+    const button = element.nextElementSibling;
+    const originalText = button.textContent;
+    button.textContent = '복사됨!';
+    setTimeout(() => {
+        button.textContent = originalText;
+    }, 2000);
 }
 
 // 히스토리 새로고침 함수
