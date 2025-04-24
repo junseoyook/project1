@@ -615,6 +615,176 @@ app.get('/api/dashboard-stats', (req, res) => {
     }
 });
 
+// 일별 통계 API 엔드포인트
+app.get('/api/stats/daily', validateApiKey, (req, res) => {
+    try {
+        const date = req.query.date;
+        if (!date) {
+            return res.status(400).json({
+                success: false,
+                error: '날짜가 제공되지 않았습니다.'
+            });
+        }
+
+        const startDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(date);
+        endDate.setHours(23, 59, 59, 999);
+
+        // 해당 날짜의 토큰 필터링
+        const dailyTokens = Array.from(tokens.entries())
+            .filter(([_, data]) => {
+                const tokenDate = new Date(data.createdAt);
+                return tokenDate >= startDate && tokenDate <= endDate;
+            });
+
+        // 통계 계산
+        let totalIssued = 0;
+        let parkingUsed = 0;
+        let doorUsed = 0;
+        const details = [];
+
+        dailyTokens.forEach(([token, data]) => {
+            if (data.type === 'parking') {
+                totalIssued++;
+                parkingUsed += data.useCount;
+            } else if (data.type === 'door') {
+                doorUsed += data.useCount;
+            }
+
+            // 만료 여부 확인
+            const now = new Date();
+            const expiryTime = new Date(data.createdAt);
+            expiryTime.setHours(expiryTime.getHours() + data.expiryHours);
+            const isExpired = now > expiryTime || data.useCount >= data.maxUses;
+
+            details.push({
+                issuedAt: data.createdAt,
+                phoneNumber: data.phoneNumber,
+                parkingUrl: `${BASE_URL}/parking.html?token=${token}`,
+                doorUrl: `${BASE_URL}/door.html?token=${token}`,
+                parkingUsageCount: data.type === 'parking' ? data.useCount : 0,
+                doorUsageCount: data.type === 'door' ? data.useCount : 0,
+                isExpired: isExpired
+            });
+        });
+
+        // 시간순 정렬
+        details.sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
+
+        res.json({
+            success: true,
+            stats: {
+                totalIssued,
+                parkingUsed,
+                doorUsed
+            },
+            details: details
+        });
+    } catch (error) {
+        console.error('일별 통계 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            error: '통계 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
+// 월별 통계 API 엔드포인트
+app.get('/api/stats/monthly', validateApiKey, (req, res) => {
+    try {
+        const month = req.query.month; // 형식: YYYY-MM
+        if (!month) {
+            return res.status(400).json({
+                success: false,
+                error: '월이 제공되지 않았습니다.'
+            });
+        }
+
+        const [year, monthNum] = month.split('-').map(Number);
+        const startDate = new Date(year, monthNum - 1, 1);
+        const endDate = new Date(year, monthNum, 0, 23, 59, 59, 999);
+
+        // 해당 월의 토큰 필터링
+        const monthlyTokens = Array.from(tokens.entries())
+            .filter(([_, data]) => {
+                const tokenDate = new Date(data.createdAt);
+                return tokenDate >= startDate && tokenDate <= endDate;
+            });
+
+        // 전체 통계 계산
+        let totalIssued = 0;
+        let parkingUsed = 0;
+        let doorUsed = 0;
+
+        // 일별 통계를 위한 맵 초기화
+        const dailyStatsMap = new Map();
+        const daysInMonth = endDate.getDate();
+
+        // 월의 모든 날짜에 대한 기본 통계 초기화
+        for (let day = 1; day <= daysInMonth; day++) {
+            const currentDate = new Date(year, monthNum - 1, day);
+            dailyStatsMap.set(currentDate.toISOString().split('T')[0], {
+                date: currentDate,
+                issuedCount: 0,
+                parkingUsed: 0,
+                doorUsed: 0,
+                activeTokens: 0,
+                expiredTokens: 0
+            });
+        }
+
+        // 토큰 데이터로 통계 계산
+        monthlyTokens.forEach(([token, data]) => {
+            const tokenDate = new Date(data.createdAt);
+            const dateKey = tokenDate.toISOString().split('T')[0];
+            const dailyStats = dailyStatsMap.get(dateKey);
+
+            if (data.type === 'parking') {
+                totalIssued++;
+                parkingUsed += data.useCount;
+                dailyStats.issuedCount++;
+                dailyStats.parkingUsed += data.useCount;
+            } else if (data.type === 'door') {
+                doorUsed += data.useCount;
+                dailyStats.doorUsed += data.useCount;
+            }
+
+            // 만료 여부 확인
+            const now = new Date();
+            const expiryTime = new Date(data.createdAt);
+            expiryTime.setHours(expiryTime.getHours() + data.expiryHours);
+            const isExpired = now > expiryTime || data.useCount >= data.maxUses;
+
+            if (isExpired) {
+                dailyStats.expiredTokens++;
+            } else {
+                dailyStats.activeTokens++;
+            }
+        });
+
+        // 일별 통계를 배열로 변환
+        const dailyStats = Array.from(dailyStatsMap.values());
+
+        res.json({
+            success: true,
+            stats: {
+                totalIssued,
+                parkingUsed,
+                doorUsed
+            },
+            dailyStats: dailyStats
+        });
+    } catch (error) {
+        console.error('월별 통계 조회 실패:', error);
+        res.status(500).json({
+            success: false,
+            error: '통계 조회 중 오류가 발생했습니다.'
+        });
+    }
+});
+
 // 토큰 동시 생성 함수
 async function generateBothTokens(phoneNumber, checkInDate, checkOutDate) {
   try {

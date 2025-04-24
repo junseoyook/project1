@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 초기 히스토리 로드
     loadTokenHistory();
 
+    // 페이지 로드 시 오늘 날짜로 설정
+    const dailyDate = document.getElementById('dailyDate');
+    if (dailyDate) {
+        const today = new Date().toISOString().split('T')[0];
+        dailyDate.value = today;
+        loadDailyStats();
+    }
+
     async function generateToken(event) {
         event.preventDefault();
         
@@ -238,4 +246,214 @@ function copyUrl(inputId) {
         document.execCommand('copy');
         showMessage('URL이 클립보드에 복사되었습니다.', 'success');
     }
-} 
+}
+
+// 일별 현황 로드 함수
+async function loadDailyStats() {
+    const date = document.getElementById('dailyDate').value;
+    if (!date) {
+        showMessage('날짜를 선택해주세요.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/stats/daily?date=${date}`, {
+            headers: {
+                'X-API-Key': API_KEY
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // 통계 업데이트
+            document.getElementById('dailyTotalIssued').textContent = data.stats.totalIssued;
+            document.getElementById('dailyParkingUsed').textContent = data.stats.parkingUsed;
+            document.getElementById('dailyDoorUsed').textContent = data.stats.doorUsed;
+
+            // 테이블 업데이트
+            const tbody = document.getElementById('dailyTableBody');
+            tbody.innerHTML = '';
+
+            data.details.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${formatDateTime(item.issuedAt)}</td>
+                    <td>${formatPhoneNumber(item.phoneNumber)}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <span class="text-truncate" style="max-width: 200px;">${item.parkingUrl}</span>
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('${item.parkingUrl}')">복사</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <span class="text-truncate" style="max-width: 200px;">${item.doorUrl}</span>
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('${item.doorUrl}')">복사</button>
+                        </div>
+                    </td>
+                    <td>${item.parkingUsageCount}</td>
+                    <td>${item.doorUsageCount}</td>
+                    <td>
+                        <span class="badge ${item.isExpired ? 'bg-danger' : 'bg-success'}">
+                            ${item.isExpired ? '만료' : '활성'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            showMessage(data.error || '데이터 로드에 실패했습니다.', 'error');
+        }
+    } catch (error) {
+        console.error('일별 현황 로드 실패:', error);
+        showMessage('서버 오류가 발생했습니다.', 'error');
+    }
+}
+
+// 날짜/시간 포맷 함수
+function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+}
+
+// 월별 현황 로드 함수
+async function loadMonthlyStats() {
+    const month = document.getElementById('monthlyDate').value;
+    if (!month) {
+        showMessage('월을 선택해주세요.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/stats/monthly?month=${month}`, {
+            headers: {
+                'X-API-Key': API_KEY
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // 통계 업데이트
+            document.getElementById('monthlyTotalIssued').textContent = data.stats.totalIssued;
+            document.getElementById('monthlyParkingUsed').textContent = data.stats.parkingUsed;
+            document.getElementById('monthlyDoorUsed').textContent = data.stats.doorUsed;
+
+            // 그래프 업데이트
+            updateMonthlyChart(data.dailyStats);
+
+            // 테이블 업데이트
+            const tbody = document.getElementById('monthlyTableBody');
+            tbody.innerHTML = '';
+
+            data.dailyStats.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${formatDate(item.date)}</td>
+                    <td>${item.issuedCount}</td>
+                    <td>${item.parkingUsed}</td>
+                    <td>${item.doorUsed}</td>
+                    <td>${item.activeTokens}</td>
+                    <td>${item.expiredTokens}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            showMessage(data.error || '데이터 로드에 실패했습니다.', 'error');
+        }
+    } catch (error) {
+        console.error('월별 현황 로드 실패:', error);
+        showMessage('서버 오류가 발생했습니다.', 'error');
+    }
+}
+
+// 월별 그래프 업데이트 함수
+function updateMonthlyChart(dailyStats) {
+    const ctx = document.getElementById('monthlyChart').getContext('2d');
+    
+    // 기존 차트가 있다면 제거
+    if (window.monthlyChart) {
+        window.monthlyChart.destroy();
+    }
+
+    const dates = dailyStats.map(item => formatDate(item.date));
+    const issuedCounts = dailyStats.map(item => item.issuedCount);
+    const parkingUsed = dailyStats.map(item => item.parkingUsed);
+    const doorUsed = dailyStats.map(item => item.doorUsed);
+
+    window.monthlyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: '발급 건수',
+                    data: issuedCounts,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                },
+                {
+                    label: '주차장 사용',
+                    data: parkingUsed,
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1
+                },
+                {
+                    label: '현관문 사용',
+                    data: doorUsed,
+                    borderColor: 'rgb(54, 162, 235)',
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#fff'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 페이지 로드 시 현재 월로 설정
+document.addEventListener('DOMContentLoaded', () => {
+    const monthlyDate = document.getElementById('monthlyDate');
+    if (monthlyDate) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        monthlyDate.value = `${year}-${month}`;
+        loadMonthlyStats();
+    }
+}); 
