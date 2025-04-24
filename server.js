@@ -284,9 +284,11 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           pfId: SOLAPI_PFID,
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            "#{name}": "고객님",
-            "#{parking}": parkingUrl,
-            "#{door}": doorUrl
+            "#{customerName}": "고객님",
+            "#{parking Url}": parkingUrl,
+            "#{entry Url}": doorUrl,
+            "#{checkInTime}": new Date().toLocaleString('ko-KR'),
+            "#{checkOutTime}": new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString('ko-KR')
           }
         }
       }
