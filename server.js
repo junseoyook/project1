@@ -284,11 +284,9 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           pfId: SOLAPI_PFID,
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            "#{customerName}": "고객님",
-            "#{parkingUrl}": parkingUrl,
-            "#{doorUrl}": doorUrl,
-            "#{checkIn}": new Date().toLocaleDateString('ko-KR'),
-            "#{checkOut}": new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString('ko-KR')
+            "#{name}": "고객님",
+            "#{parking}": parkingUrl,
+            "#{door}": doorUrl
           }
         }
       }
@@ -456,13 +454,10 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
       });
     }
 
-    // 주차장 토큰 생성
+    // 주차장과 현관문 토큰 생성
     const parkingToken = generateToken();
-    console.log('[토큰 생성] 주차장 토큰 생성됨:', parkingToken);
-
-    // 현관문 토큰 생성
     const doorToken = generateToken();
-    console.log('[토큰 생성] 현관문 토큰 생성됨:', doorToken);
+    console.log('[토큰 생성] 토큰 생성됨:', { parkingToken, doorToken });
 
     // 토큰 저장
     const timestamp = new Date();
@@ -491,29 +486,7 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
     };
     tokens.set(doorToken, doorTokenData);
     
-    // 히스토리에 기록
-    const parkingHistoryEntry = {
-      token: parkingToken,
-      phoneNumber,
-      createdAt: timestamp,
-      url: `${BASE_URL}/parking.html?token=${parkingToken}`,
-      status: 'active',
-      useCount: 0,
-      lastUsed: null
-    };
-    tokenHistory.set(parkingToken, parkingHistoryEntry);
-
-    const doorHistoryEntry = {
-      token: doorToken,
-      phoneNumber,
-      createdAt: timestamp,
-      url: `${BASE_URL}/door.html?token=${doorToken}`,
-      status: 'active',
-      useCount: 0,
-      lastUsed: null
-    };
-    tokenHistory.set(doorToken, doorHistoryEntry);
-
+    // URL 생성
     const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
     const doorUrl = `${BASE_URL}/door.html?token=${doorToken}`;
     console.log('[토큰 생성] 생성된 URL:', { parkingUrl, doorUrl });
@@ -525,8 +498,8 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
 
       const response = {
         success: true,
-        parkingUrl: parkingUrl,
-        doorUrl: doorUrl,
+        parkingUrl,
+        doorUrl,
         message: notificationSent ? 
           '토큰이 생성되었으며 알림톡이 발송되었습니다.' : 
           '토큰이 생성되었으나 알림톡 발송에 실패했습니다. URL을 직접 복사해주세요.'
@@ -538,8 +511,8 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
       console.error('[토큰 생성] 알림톡 발송 중 에러:', error);
       res.json({
         success: true,
-        parkingUrl: parkingUrl,
-        doorUrl: doorUrl,
+        parkingUrl,
+        doorUrl,
         message: '토큰이 생성되었으나 알림톡 발송에 실패했습니다. URL을 직접 복사해주세요.'
       });
     }
