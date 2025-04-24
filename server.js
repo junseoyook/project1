@@ -93,22 +93,23 @@ const tokens = new Map();
 const tokenHistory = new Map();
 
 // API 키 설정
-const API_KEY = process.env.API_KEY || 'your-secret-api-key';
+const API_KEY = 'your-secret-api-key';
 
 // API 키 검증 미들웨어
 const validateApiKey = (req, res, next) => {
-  // API 키 검증을 일시적으로 비활성화
-  next();
-  /* 임시로 주석 처리
   const apiKey = req.headers['x-api-key'];
+  console.log('받은 API 키:', apiKey);
+  console.log('설정된 API 키:', API_KEY);
+  
   if (!apiKey || apiKey !== API_KEY) {
+    console.log('API 키 검증 실패');
     return res.status(401).json({
       success: false,
       error: '유효하지 않은 API 키입니다.'
     });
   }
+  console.log('API 키 검증 성공');
   next();
-  */
 };
 
 // 토큰 생성 함수
@@ -438,7 +439,7 @@ app.post('/api/tokens/validate', async (req, res) => {
 });
 
 // 토큰 생성 API 엔드포인트
-app.post('/api/generate-tokens', async (req, res) => {
+app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
   try {
     const { phoneNumber } = req.body;
     console.log('[토큰 생성] 요청 받음:', { phoneNumber });

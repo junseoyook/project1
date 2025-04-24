@@ -1,11 +1,12 @@
 // API 기본 URL 설정
 const API_BASE_URL = window.location.origin;
-const API_KEY = process.env.API_KEY || 'your-secret-api-key';
+const API_KEY = 'your-secret-api-key'; // Railway에 설정한 것과 동일한 값으로 설정
 
 // DOM이 로드되면 이벤트 리스너 등록
 document.addEventListener('DOMContentLoaded', () => {
     const tokenForm = document.getElementById('tokenForm');
     const resultMessage = document.getElementById('resultMessage');
+    console.log('API Key:', API_KEY); // API 키 확인용 로그
 
     if (tokenForm) {
         tokenForm.addEventListener('submit', generateToken);
@@ -29,10 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/generate-tokens', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'x-api-key': API_KEY
                 },
                 body: JSON.stringify({ phoneNumber })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || '서버 오류가 발생했습니다.');
+            }
 
             const data = await response.json();
             console.log('서버 응답:', data);
@@ -57,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('에러:', error);
-            showError('서버 오류가 발생했습니다.');
+            showError(error.message || '서버 오류가 발생했습니다.');
         }
     }
 
