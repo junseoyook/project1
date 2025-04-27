@@ -274,6 +274,7 @@ const { checkInTime, checkOutTime } = getTodayTomorrowTimeStrings();
 async function sendKakaoNotification(phoneNumber, parkingToken) {
   try {
     const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
+    const { checkInTime, checkOutTime } = getTodayTomorrowTimeStrings();
     console.log('[알림톡] 발송 시도:', {
       phoneNumber,
       parkingUrl,
@@ -292,7 +293,7 @@ async function sendKakaoNotification(phoneNumber, parkingToken) {
           variables: {
             "#{customerName}": "고객님",
             "#{pariking Url}": parkingUrl,
-            "#{entry Url}": "비밀번호: 1234#",
+            "#{entry Url}": "비밀번호: 5678#",
             "#{checkInTime}": checkInTime,
             "#{checkOutTime}": checkOutTime
           }
@@ -794,14 +795,6 @@ async function generateBothTokens(phoneNumber, checkInDate, checkOutDate) {
     // 알림톡 발송 (두 URL을 하나의 메시지로)
     const parkingUrl = `${BASE_URL}/customer/${parkingToken}`;
     const doorUrl = `${BASE_URL}/customer/${doorToken}`;
-    
-    // 날짜 포맷 함수 (오늘/내일)
-    function getTodayTomorrowTimeStrings() {
-      return {
-        checkInTime: '오늘 16:00',
-        checkOutTime: '내일 11:00'
-      };
-    }
     const { checkInTime, checkOutTime } = getTodayTomorrowTimeStrings();
 
     const messageData = {
