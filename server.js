@@ -261,6 +261,15 @@ function useToken(token) {
   }
 }
 
+// 날짜 포맷 함수 (오늘/내일)
+function getTodayTomorrowTimeStrings() {
+  return {
+    checkInTime: '오늘 16:00',
+    checkOutTime: '내일 11:00'
+  };
+}
+const { checkInTime, checkOutTime } = getTodayTomorrowTimeStrings();
+
 // 알림톡 발송 함수 (주차장만)
 async function sendKakaoNotification(phoneNumber, parkingToken) {
   try {
@@ -283,8 +292,9 @@ async function sendKakaoNotification(phoneNumber, parkingToken) {
           variables: {
             "#{customerName}": "고객님",
             "#{pariking Url}": parkingUrl,
-            "#{checkInTime}": new Date().toLocaleString('ko-KR'),
-            "#{checkOutTime}": new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString('ko-KR')
+            "#{entry Url}": "비밀번호: 1234#",
+            "#{checkInTime}": checkInTime,
+            "#{checkOutTime}": checkOutTime
           }
         }
       }
@@ -785,6 +795,15 @@ async function generateBothTokens(phoneNumber, checkInDate, checkOutDate) {
     const parkingUrl = `${BASE_URL}/customer/${parkingToken}`;
     const doorUrl = `${BASE_URL}/customer/${doorToken}`;
     
+    // 날짜 포맷 함수 (오늘/내일)
+    function getTodayTomorrowTimeStrings() {
+      return {
+        checkInTime: '오늘 16:00',
+        checkOutTime: '내일 11:00'
+      };
+    }
+    const { checkInTime, checkOutTime } = getTodayTomorrowTimeStrings();
+
     const messageData = {
       message: {
         to: phoneNumber,
@@ -796,8 +815,8 @@ async function generateBothTokens(phoneNumber, checkInDate, checkOutDate) {
             "#{customerName}": "고객님",
             "#{parkingUrl}": parkingUrl,
             "#{doorUrl}": doorUrl,
-            "#{checkIn}": new Date(checkInDate).toLocaleDateString('ko-KR'),
-            "#{checkOut}": new Date(checkOutDate).toLocaleDateString('ko-KR')
+            "#{checkInTime}": checkInTime,
+            "#{checkOutTime}": checkOutTime
           }
         }
       }
