@@ -292,18 +292,13 @@
             const buttons = document.querySelectorAll('.btn-control');
             
             try {
-                const response = await fetch('/api/control/ESP32_001', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    },
-                    body: JSON.stringify({ command: 'status' })
+                const response = await fetch('/api/device/command/ESP32_001', {
+                    method: 'GET',
                 });
 
                 const data = await response.json();
                 
-                if (data.success) {
+                if (data.command === 'open' || data.command === 'close' || data.command === null) {
                     isConnected = true;
                     statusLed.className = 'status-indicator status-connected';
                     statusMessage.textContent = '게이트와 연결되었습니다';
@@ -337,11 +332,10 @@
 
                 document.getElementById(activeButton).classList.add(`animate-${command}`);
 
-                const response = await fetch('/api/control/ESP32_001', {
+                const response = await fetch('/api/device/command/ESP32_001', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ command })
                 });
@@ -349,7 +343,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    statusMessage.textContent = data.message;
+                    statusMessage.textContent = '명령이 전송되었습니다';
                     navigator.vibrate(50);
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
