@@ -368,11 +368,6 @@
             }
         });
 
-        // iOS에서 더블탭 확대 방지
-        document.addEventListener('touchend', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-
         // PWA 상태바 처리
         if (window.navigator.standalone) {
             document.documentElement.style.setProperty('--safe-area-inset-top', '44px');
