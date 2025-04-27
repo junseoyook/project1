@@ -198,12 +198,12 @@
         <span id="statusLed" class="status-indicator"></span>
         <h1>주차장 리모컨</h1>
     </div>
-
+    
     <div class="container">
         <div id="statusMessage" class="status-message">
             연결 상태 확인 중...
         </div>
-        <div id="gateStatus" class="status-message" style="background:rgba(0,122,255,0.08);color:#007AFF;font-size:16px;margin-bottom:16px;"></div>
+        <div id="barrierState" class="status-message" style="background:rgba(0,122,255,0.08);color:#007AFF;font-size:16px;margin-bottom:16px;"></div>
         <div id="quotaStatus" class="status-message" style="background:rgba(52,199,89,0.08);color:#34C759;font-size:16px;margin-bottom:16px;display:none;"></div>
 
         <div class="remote-buttons">
@@ -214,11 +214,8 @@
             <button id="closeButton" class="btn-control btn-close" onclick="sendCommand('close')" disabled>
                 <i class="fas fa-lock"></i>
                 <span class="label">닫기</span>
-            </button>
-        </div>
-        <div class="alert" style="background:#FF3B30;color:#fff;font-weight:bold;text-align:center;font-size:17px;border-radius:12px;padding:14px 10px 12px 10px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-            출입이후에는 반드시 <span style="text-decoration:underline;">닫힘 버튼</span>을 눌러주시기 바랍니다.
-        </div>
+                </button>
+            </div>
 
         <div class="notice">
             <p>
@@ -285,26 +282,6 @@
             statusLed.className = 'status-indicator';
         }
 
-        // 게이트 상태 조회 및 표시
-        async function updateGateStatus() {
-            try {
-                const response = await fetch('/api/device/status/ESP32_001');
-                const data = await response.json();
-                const gateStatusDiv = document.getElementById('gateStatus');
-                let text = '';
-                if (data.status === 'opened' || data.status === 'open') {
-                    text = '현재 상태: <b style="color:#34C759">열림</b>';
-                } else if (data.status === 'closed' || data.status === 'close') {
-                    text = '현재 상태: <b style="color:#FF3B30">닫힘</b>';
-                } else {
-                    text = '현재 상태: <b style="color:#8E8E93">알 수 없음</b>';
-                }
-                gateStatusDiv.innerHTML = text;
-            } catch (e) {
-                document.getElementById('gateStatus').innerHTML = '현재 상태: <b style="color:#8E8E93">알 수 없음</b>';
-            }
-        }
-
         // 연결 상태 확인
         async function checkConnection() {
             if (!await validateToken()) return;
@@ -325,16 +302,38 @@
                     statusLed.className = 'status-indicator status-connected';
                     statusMessage.textContent = '게이트와 연결되었습니다';
                     buttons.forEach(btn => btn.disabled = false);
-                } else {
+                    } else {
                     throw new Error('연결 실패');
-                }
-                await updateGateStatus();
+                    }
             } catch (error) {
                 isConnected = false;
                 statusLed.className = 'status-indicator';
                 statusMessage.textContent = '게이트와 연결할 수 없습니다';
                 buttons.forEach(btn => btn.disabled = true);
                 setTimeout(checkConnection, 5000);
+            }
+        }
+
+        // 차단기 상태 표시 함수
+        async function updateBarrierState() {
+            try {
+                const response = await fetch('/api/device/status/ESP32_001');
+                const data = await response.json();
+                const barrierDiv = document.getElementById('barrierState');
+                if (data.status === 'opened') {
+                    barrierDiv.textContent = '현재 상태: 열림';
+                    barrierDiv.style.color = '#007AFF';
+                } else if (data.status === 'closed') {
+                    barrierDiv.textContent = '현재 상태: 닫힘';
+                    barrierDiv.style.color = '#FF3B30';
+                } else {
+                    barrierDiv.textContent = '현재 상태: 알 수 없음';
+                    barrierDiv.style.color = '#8E8E93';
+                }
+            } catch (e) {
+                const barrierDiv = document.getElementById('barrierState');
+                barrierDiv.textContent = '현재 상태: 알 수 없음';
+                barrierDiv.style.color = '#8E8E93';
             }
         }
 
@@ -370,9 +369,9 @@
                     if ('vibrate' in navigator) {
                         navigator.vibrate(50);
                     }
-                    // 명령 성공 후 잔여 횟수/시간 갱신
+                    // 명령 성공 후 상태 갱신
+                    await updateBarrierState();
                     await validateToken();
-                    await updateGateStatus();
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
                 }
@@ -393,7 +392,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (await validateToken()) {
                 checkConnection();
-                updateGateStatus();
+                updateBarrierState();
             }
         });
 

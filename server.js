@@ -904,24 +904,23 @@ app.get('/api/device/command/:deviceId', (req, res) => {
   res.json({ command });
 });
 
-// ====== 디바이스 상태 저장소 ======
+// ====== 디바이스 상태 저장소 및 상태 조회 엔드포인트 추가 ======
 const deviceStatus = {};
 
-// 상태 저장 (POST)
+// 상태 저장 (기존 POST /api/device/status/:deviceId에서 추가)
 app.post('/api/device/status/:deviceId', (req, res) => {
   const { deviceId } = req.params;
   const { status } = req.body;
-  if (!status) {
-    return res.status(400).json({ success: false, error: '상태가 필요합니다.' });
+  if (status) {
+    deviceStatus[deviceId] = status;
   }
-  deviceStatus[deviceId] = status;
   res.json({ success: true });
 });
 
 // 상태 조회 (GET)
 app.get('/api/device/status/:deviceId', (req, res) => {
   const { deviceId } = req.params;
-  const status = deviceStatus[deviceId] || 'unknown';
+  const status = deviceStatus[deviceId] || null;
   res.json({ status });
 });
 
