@@ -344,7 +344,9 @@
                 
                 if (data.success) {
                     statusMessage.textContent = '명령이 전송되었습니다';
-                    navigator.vibrate(50);
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(50);
+                    }
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
                 }
