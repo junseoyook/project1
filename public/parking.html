@@ -203,6 +203,7 @@
         <div id="statusMessage" class="status-message">
             연결 상태 확인 중...
         </div>
+        <div id="gateStatus" class="status-message" style="background:rgba(0,122,255,0.08);color:#007AFF;font-size:16px;margin-bottom:16px;"></div>
         <div id="quotaStatus" class="status-message" style="background:rgba(52,199,89,0.08);color:#34C759;font-size:16px;margin-bottom:16px;display:none;"></div>
 
         <div class="remote-buttons">
@@ -281,6 +282,26 @@
             statusLed.className = 'status-indicator';
         }
 
+        // 게이트 상태 조회 및 표시
+        async function updateGateStatus() {
+            try {
+                const response = await fetch('/api/device/status/ESP32_001');
+                const data = await response.json();
+                const gateStatusDiv = document.getElementById('gateStatus');
+                let text = '';
+                if (data.status === 'opened' || data.status === 'open') {
+                    text = '현재 상태: <b style="color:#34C759">열림</b>';
+                } else if (data.status === 'closed' || data.status === 'close') {
+                    text = '현재 상태: <b style="color:#FF3B30">닫힘</b>';
+                } else {
+                    text = '현재 상태: <b style="color:#8E8E93">알 수 없음</b>';
+                }
+                gateStatusDiv.innerHTML = text;
+            } catch (e) {
+                document.getElementById('gateStatus').innerHTML = '현재 상태: <b style="color:#8E8E93">알 수 없음</b>';
+            }
+        }
+
         // 연결 상태 확인
         async function checkConnection() {
             if (!await validateToken()) return;
@@ -304,6 +325,7 @@
                 } else {
                     throw new Error('연결 실패');
                 }
+                await updateGateStatus();
             } catch (error) {
                 isConnected = false;
                 statusLed.className = 'status-indicator';
@@ -347,6 +369,7 @@
                     }
                     // 명령 성공 후 잔여 횟수/시간 갱신
                     await validateToken();
+                    await updateGateStatus();
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
                 }
@@ -367,6 +390,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (await validateToken()) {
                 checkConnection();
+                updateGateStatus();
             }
         });
 

@@ -904,6 +904,27 @@ app.get('/api/device/command/:deviceId', (req, res) => {
   res.json({ command });
 });
 
+// ====== 디바이스 상태 저장소 ======
+const deviceStatus = {};
+
+// 상태 저장 (POST)
+app.post('/api/device/status/:deviceId', (req, res) => {
+  const { deviceId } = req.params;
+  const { status } = req.body;
+  if (!status) {
+    return res.status(400).json({ success: false, error: '상태가 필요합니다.' });
+  }
+  deviceStatus[deviceId] = status;
+  res.json({ success: true });
+});
+
+// 상태 조회 (GET)
+app.get('/api/device/status/:deviceId', (req, res) => {
+  const { deviceId } = req.params;
+  const status = deviceStatus[deviceId] || 'unknown';
+  res.json({ status });
+});
+
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`서버 실행 중: 포트 ${PORT}`);
