@@ -372,6 +372,8 @@
                     // 명령 성공 후 상태 갱신
                     await updateBarrierState();
                     await validateToken();
+                    // 1.5초 후 상태를 한 번 더 갱신
+                    setTimeout(updateBarrierState, 1500);
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
                 }
