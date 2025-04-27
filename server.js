@@ -261,16 +261,13 @@ function useToken(token) {
   }
 }
 
-// 알림톡 발송 함수
-async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
+// 알림톡 발송 함수 (주차장만)
+async function sendKakaoNotification(phoneNumber, parkingToken) {
   try {
     const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
-    const doorUrl = `${BASE_URL}/door.html?token=${doorToken}`;
-    
     console.log('[알림톡] 발송 시도:', {
       phoneNumber,
       parkingUrl,
-      doorUrl,
       SOLAPI_API_KEY: SOLAPI_API_KEY ? '설정됨' : '미설정',
       SOLAPI_PFID: SOLAPI_PFID,
       SENDER_PHONE: SENDER_PHONE
@@ -286,7 +283,6 @@ async function sendKakaoNotification(phoneNumber, parkingToken, doorToken) {
           variables: {
             "#{customerName}": "고객님",
             "#{pariking Url}": parkingUrl,
-            "#{entry Url}": doorUrl,
             "#{checkInTime}": new Date().toLocaleString('ko-KR'),
             "#{checkOutTime}": new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString('ko-KR')
           }
@@ -456,15 +452,12 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
       });
     }
 
-    // 주차장과 현관문 토큰 생성
+    // 주차장 토큰만 생성
     const parkingToken = generateToken();
-    const doorToken = generateToken();
-    console.log('[토큰 생성] 토큰 생성됨:', { parkingToken, doorToken });
+    console.log('[토큰 생성] 주차장 토큰 생성됨:', parkingToken);
 
     // 토큰 저장
     const timestamp = new Date();
-    
-    // 주차장 토큰 데이터 저장
     const parkingTokenData = {
       phoneNumber,
       type: 'parking',
@@ -475,33 +468,19 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
       maxUses: 10
     };
     tokens.set(parkingToken, parkingTokenData);
-    
-    // 현관문 토큰 데이터 저장
-    const doorTokenData = {
-      phoneNumber,
-      type: 'door',
-      createdAt: timestamp,
-      expiryHours: 24,
-      useCount: 0,
-      lastUsed: null,
-      maxUses: 5
-    };
-    tokens.set(doorToken, doorTokenData);
-    
+
     // URL 생성
     const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
-    const doorUrl = `${BASE_URL}/door.html?token=${doorToken}`;
-    console.log('[토큰 생성] 생성된 URL:', { parkingUrl, doorUrl });
+    console.log('[토큰 생성] 생성된 URL:', parkingUrl);
 
     try {
       // 알림톡 발송
-      const notificationSent = await sendKakaoNotification(phoneNumber, parkingToken, doorToken);
+      const notificationSent = await sendKakaoNotification(phoneNumber, parkingToken);
       console.log('[토큰 생성] 알림톡 발송 결과:', notificationSent);
 
       const response = {
         success: true,
         parkingUrl,
-        doorUrl,
         message: notificationSent ? 
           '토큰이 생성되었으며 알림톡이 발송되었습니다.' : 
           '토큰이 생성되었으나 알림톡 발송에 실패했습니다. URL을 직접 복사해주세요.'
@@ -514,7 +493,6 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
       res.json({
         success: true,
         parkingUrl,
-        doorUrl,
         message: '토큰이 생성되었으나 알림톡 발송에 실패했습니다. URL을 직접 복사해주세요.'
       });
     }

@@ -50,9 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // URL 결과 섹션 표시
                 document.getElementById('urlResult').style.display = 'block';
                 
-                // URL 입력
+                // 주차장 URL만 입력
                 document.getElementById('parkingUrl').value = data.parkingUrl;
-                document.getElementById('doorUrl').value = data.doorUrl;
                 
                 // 성공 메시지 표시
                 const alertDiv = document.querySelector('#urlResult .alert');
