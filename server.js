@@ -905,6 +905,27 @@ app.get('/door.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'door.html'));
 });
 
+// ====== 디바이스 명령 저장소 및 엔드포인트 추가 ======
+const deviceCommands = {};
+
+// 명령 저장 (POST)
+app.post('/api/device/command/:deviceId', (req, res) => {
+  const { deviceId } = req.params;
+  const { command } = req.body;
+  if (!command) {
+    return res.status(400).json({ success: false, error: '명령이 필요합니다.' });
+  }
+  deviceCommands[deviceId] = command;
+  res.json({ success: true });
+});
+
+// 명령 조회 (GET)
+app.get('/api/device/command/:deviceId', (req, res) => {
+  const { deviceId } = req.params;
+  const command = deviceCommands[deviceId] || null;
+  res.json({ command });
+});
+
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`서버 실행 중: 포트 ${PORT}`);
