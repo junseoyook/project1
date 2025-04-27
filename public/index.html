@@ -20,6 +20,8 @@
             bottom: 0;
             background-color: #2a2d31;
             padding: 20px;
+            z-index: 1000;
+            transition: left 0.3s;
         }
         .sidebar h1 {
             font-size: 1.5rem;
@@ -40,6 +42,7 @@
         .main-content {
             margin-left: 250px;
             padding: 2rem;
+            transition: margin-left 0.3s;
         }
         .page {
             display: none;
@@ -203,6 +206,48 @@
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: 60px;
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: auto;
+                padding: 0 10px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .sidebar h1 {
+                font-size: 1.1rem;
+                margin-bottom: 0;
+            }
+            .main-content {
+                margin-left: 0;
+                margin-top: 70px;
+                padding: 1rem 0.5rem;
+            }
+            .nav-link {
+                display: inline-block;
+                margin: 0 0.2rem;
+                padding: 0.5rem 0.7rem;
+                font-size: 0.95rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .recent-entries, .card, .table-responsive {
+                padding: 0.5rem;
+            }
+            .entries-table th, .entries-table td {
+                padding: 8px;
+                font-size: 0.95rem;
+            }
+            .form-control, .btn, .input-group {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
