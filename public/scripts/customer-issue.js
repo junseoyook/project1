@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (data.success) {
                 if (data.parkingUrl) {
-                    issueMsg.innerHTML = '아래 버튼을 눌러 리모컨을 바로 이용하세요.<br><a href="' + data.parkingUrl + '" target="_blank" style="display:inline-block;margin-top:10px;padding:10px 18px;background:#007AFF;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">리모컨 바로가기</a>';
+                    window.location.href = data.parkingUrl;
+                    return;
                 } else {
                     issueMsg.textContent = '카카오톡으로 리모컨이 발송되었습니다!';
                 }
