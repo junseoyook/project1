@@ -34,59 +34,56 @@
 
         .ios-card {
             background: #fff;
-            border-radius: 24px;
+            border-radius: 16px;
             box-shadow: var(--main-shadow);
-            padding: 32px 20px 24px 20px;
+            padding: 24px 16px;
             max-width: 350px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: stretch;
             margin-top: 40px;
-            border: 1.5px solid #e5e5ea;
+            border: 1px solid #e5e5ea;
         }
 
         .ios-title {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 600;
             color: var(--main-dark);
-            margin-bottom: 18px;
-            letter-spacing: -1px;
+            margin-bottom: 24px;
             text-align: center;
         }
 
         .ios-btn {
             width: 100%;
-            height: 64px;
-            border-radius: 16px;
+            height: 56px;
+            border-radius: 12px;
             border: none;
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
+            transition: all 0.2s;
             outline: none;
-            margin-bottom: 18px;
-            gap: 10px;
+            margin-bottom: 16px;
         }
 
         .ios-btn.open {
-            background: linear-gradient(135deg, #007AFF 60%, #a0e9ff 100%);
+            background: var(--main-blue);
             color: #fff;
         }
 
         .ios-btn.close {
-            background: linear-gradient(135deg, #FF3B30 60%, #ffd6e0 100%);
+            background: var(--main-red);
             color: #fff;
             margin-bottom: 0;
         }
 
         .ios-btn:active {
-            transform: scale(0.97);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            transform: scale(0.98);
+            opacity: 0.9;
         }
 
         .ios-btn:disabled {
@@ -94,31 +91,41 @@
             cursor: not-allowed;
         }
 
-        .ios-btn .sficon {
-            font-size: 28px;
-            margin-right: 8px;
-        }
-
         .ios-status {
             font-size: 15px;
             font-weight: 500;
-            margin-bottom: 18px;
+            margin: 16px 0;
             color: var(--main-blue);
-            background: #f0f8ff;
-            border-radius: 12px;
-            padding: 7px 0;
-            width: 100%;
             text-align: center;
         }
 
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #E5E5EA;
+            border-radius: 2px;
+            margin: 12px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--main-blue);
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+
+        .progress-bar.close {
+            background: var(--main-red);
+        }
+
         .ios-notice {
-            background: #fffbe7;
-            color: #ff9500;
-            border-radius: 12px;
-            padding: 10px 16px;
-            font-size: 14px;
-            margin-bottom: 10px;
+            font-size: 13px;
+            color: #666;
             text-align: center;
+            margin-top: 16px;
         }
 
         .ios-expiry {
@@ -142,14 +149,13 @@
 <body>
     <div class="ios-card">
         <div class="ios-title">주차장 리모컨</div>
-        <button id="openButton" class="ios-btn open" onclick="sendCommand('open')" disabled>
-            <span class="sficon">􀎧</span> 열기
-        </button>
+        <button id="openButton" class="ios-btn open" onclick="sendCommand('open')" disabled>열기</button>
         <div id="iosStatus" class="ios-status">상태 확인 중...</div>
-        <button id="closeButton" class="ios-btn close" onclick="sendCommand('close')" disabled>
-            <span class="sficon">􀎩</span> 닫기
-        </button>
-        <div class="ios-notice">입차 후 <b>반드시 닫힘 버튼</b>을 눌러주세요!</div>
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <button id="closeButton" class="ios-btn close" onclick="sendCommand('close')" disabled>닫기</button>
+        <div class="ios-notice">입차 후 반드시 닫기 버튼을 눌러주세요</div>
         <div class="ios-expiry">이 링크는 숙박기간동안만 유효하고 그 이후에는 만료됩니다.</div>
     </div>
 
@@ -222,9 +228,9 @@
                     iosStatus.innerHTML = '<span style="color:#34C759;">🟢 연결됨</span>';
                     document.getElementById('openButton').disabled = false;
                     document.getElementById('closeButton').disabled = false;
-                } else {
+                    } else {
                     throw new Error('연결 실패');
-                }
+                    }
             } catch (error) {
                 isConnected = false;
                 iosStatus.innerHTML = '<span style="color:#FF3B30;">🔴 서버 연결 실패</span>';
@@ -244,7 +250,7 @@
                     iosStatus.innerHTML = '<span style="color:#007AFF;">🚦 현재 상태: <b>열림</b></span>';
                 } else if (data.status === 'closed') {
                     iosStatus.innerHTML = '<span style="color:#FF3B30;">🚦 현재 상태: <b>닫힘</b></span>';
-                } else {
+            } else {
                     iosStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
                 }
             } catch (e) {
@@ -261,11 +267,20 @@
             }
             const iosStatus = document.getElementById('iosStatus');
             const activeButton = command === 'open' ? 'openButton' : 'closeButton';
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            
+            // 프로그레스 바 초기화
+            progressBar.style.width = '0%';
+            progressBar.className = 'progress-bar' + (command === 'close' ? ' close' : '');
+            progressContainer.style.display = 'block';
+            
             iosStatus.innerHTML = '<span style="color:#007AFF;">차단기 동작 중입니다...<br>잠시만 기다려주세요!</span>';
             document.getElementById('openButton').disabled = true;
             document.getElementById('closeButton').disabled = true;
+            
             try {
-                document.getElementById(activeButton).style.transform = 'scale(0.97)';
+                document.getElementById(activeButton).style.transform = 'scale(0.98)';
                 const response = await fetch('/api/device/command/ESP32_001', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -279,19 +294,38 @@
                 }
             } catch (error) {
                 iosStatus.innerHTML = '<span style="color:#FF3B30;">' + error.message + '</span>';
+                progressContainer.style.display = 'none';
                 return;
             } finally {
                 setTimeout(() => {
                     document.getElementById(activeButton).style.transform = 'scale(1)';
                 }, 400);
             }
+
+            // 프로그레스 바 애니메이션
+            const duration = 3000; // 3초
+            const interval = 30; // 30ms마다 업데이트
+            const steps = duration / interval;
+            const increment = 100 / steps;
+            
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += increment;
+                progressBar.style.width = `${Math.min(progress, 100)}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    progressContainer.style.display = 'none';
+                }
+            }, interval);
+
             setTimeout(async () => {
                 await updateBarrierState();
                 await validateToken();
                 [500, 1000, 1500, 2000].forEach(delay => setTimeout(updateBarrierState, delay));
                 document.getElementById('openButton').disabled = false;
                 document.getElementById('closeButton').disabled = false;
-            }, 3000);
+            }, duration);
         }
 
         // 페이지 로드 시 토큰 검증 및 연결 상태 확인

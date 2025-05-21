@@ -3,171 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>주차장 리모컨</title>
+    <title>셀프발급 - 주차장 관리 시스템</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: 'Noto Sans KR', sans-serif;
         }
 
         body {
-            background-color: #f5f5f7;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            background-color: #f7f7f7;
+            color: #484848;
+            line-height: 1.6;
         }
 
         .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #222222;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #717171;
+        }
+
+        .card {
             background: white;
-            border-radius: 24px;
-            padding: 30px;
-            width: 100%;
-            max-width: 320px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-        }
-
-        .location {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .status-icon {
-            font-size: 48px;
-            margin: 20px 0;
-        }
-
-        .status-text {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #1c1c1e;
-        }
-
-        .button-group {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .remote-button {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .remote-button.open {
-            background: #007AFF;
-            color: white;
-        }
-
-        .remote-button.close {
-            background: #FF3B30;
-            color: white;
-        }
-
-        .remote-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .remote-button:not(:disabled):hover {
-            transform: translateY(-2px);
-        }
-
-        .remote-button:not(:disabled):active {
-            transform: scale(0.98);
-        }
-
-        #ledIndicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: #ff0000;
-            box-shadow: 0 0 5px #ff0000;
-            transition: all 0.3s ease;
-        }
-
-        #ledIndicator.active {
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        #connectionStatus {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
             border-radius: 12px;
-            background: rgba(0,0,0,0.8);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #222222;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #ff385c;
+        }
+
+        .btn {
+            background-color: #ff385c;
             color: white;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
         }
 
-        #connectionStatus.show {
-            opacity: 1;
+        .btn:hover {
+            background-color: #e31c5f;
         }
 
-        .button-icon {
-            font-size: 20px;
-            margin-right: 8px;
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+        }
+
+        .result h3 {
+            color: #222222;
+            margin-bottom: 1rem;
+        }
+
+        .result p {
+            color: #484848;
+            margin-bottom: 0.5rem;
+        }
+
+        .error {
+            color: #ff385c;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 셀프 발급 폼 -->
-        <div id="issueForm">
-            <div style="font-size:20px;font-weight:600;margin-bottom:16px;">주차장 리모컨 셀프 발급</div>
-            <input type="tel" id="customerPhone" placeholder="휴대폰 번호 (010-0000-0000)" style="width:100%;padding:12px;font-size:16px;border-radius:8px;border:1px solid #ccc;margin-bottom:12px;">
-            <button id="issueBtn" style="width:100%;padding:12px;font-size:16px;background:#007AFF;color:white;border:none;border-radius:8px;font-weight:600;">리모컨 발급</button>
-            <div id="issueMsg" style="margin-top:10px;font-size:15px;color:#007AFF;"></div>
+        <div class="header">
+            <h1>셀프발급</h1>
+            <p>주차권을 발급받으세요</p>
         </div>
-        <!-- 기존 리모컨 UI: 발급 성공 시에만 표시 -->
-        <div id="remoteUI" style="display:none;">
-            <div class="location">스마트 주차장</div>
-            <div class="status-icon">🚗</div>
-            <div class="status-text">리모컨</div>
-            <div class="button-group">
-                <button class="remote-button open" data-command="open">
-                    <span class="button-icon">↑</span>OPEN
-                </button>
-                <button class="remote-button close" data-command="close">
-                    <span class="button-icon">↓</span>CLOSE
-                </button>
-            </div>
-            <div id="ledIndicator"></div>
+
+        <div class="card">
+            <form id="selfIssuanceForm">
+                <div class="form-group">
+                    <label for="carNumber">차량번호</label>
+                    <input type="text" id="carNumber" class="form-control" placeholder="예: 12가 3456" required>
+                </div>
+                <div class="form-group">
+                    <label for="parkingTime">주차시간</label>
+                    <input type="number" id="parkingTime" class="form-control" placeholder="주차할 시간을 입력하세요" required>
+                </div>
+                <button type="submit" class="btn">주차권 발급</button>
+            </form>
+        </div>
+
+        <div id="result" class="result" style="display: none;">
+            <h3>발급 결과</h3>
+            <p id="resultText"></p>
         </div>
     </div>
-    <div id="connectionStatus" style="display:none;"></div>
-    <script src="../scripts/customer-issue.js"></script>
-    <script src="../scripts/remote.js"></script>
+
+    <script>
+        document.getElementById('selfIssuanceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const carNumber = document.getElementById('carNumber').value;
+            const parkingTime = document.getElementById('parkingTime').value;
+            
+            try {
+                const response = await fetch('/api/self-issuance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        carNumber,
+                        parkingTime: parseInt(parkingTime)
+                    })
+                });
+
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('result');
+                const resultText = document.getElementById('resultText');
+                
+                if (response.ok) {
+                    resultText.innerHTML = `
+                        <p>주차권이 성공적으로 발급되었습니다.</p>
+                        <p>차량번호: ${data.carNumber}</p>
+                        <p>주차시간: ${data.parkingTime}시간</p>
+                        <p>발급시간: ${new Date(data.issueTime).toLocaleString()}</p>
+                    `;
+                } else {
+                    resultText.innerHTML = `<p class="error">${data.message}</p>`;
+                }
+                
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                const resultDiv = document.getElementById('result');
+                const resultText = document.getElementById('resultText');
+                resultText.innerHTML = '<p class="error">주차권 발급 중 오류가 발생했습니다.</p>';
+                resultDiv.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html> 

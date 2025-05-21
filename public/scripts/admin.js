@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const phoneNumber = document.getElementById('phoneNumber').value;
         console.log('전화번호 입력값:', phoneNumber);
-
+        
         if (!phoneNumber) {
             showError('전화번호를 입력해주세요.');
             return;
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 // URL 결과 섹션 표시
                 document.getElementById('urlResult').style.display = 'block';
@@ -222,7 +222,7 @@ function showErrorMessage(message) {
         existingAlert.remove();
     }
     cardBody.appendChild(messageDiv);
-}
+} 
 
 // URL 복사 함수
 function copyUrl(inputId) {

@@ -198,11 +198,11 @@
         <span id="statusLed" class="status-indicator"></span>
         <h1>현관문 리모컨</h1>
     </div>
-
+    
     <div class="container">
         <div id="statusMessage" class="status-message">
             연결 상태 확인 중...
-        </div>
+            </div>
 
         <div class="remote-buttons">
             <button id="openButton" class="btn-control btn-open" onclick="sendCommand('open')" disabled>
@@ -212,8 +212,8 @@
             <button id="closeButton" class="btn-control btn-close" onclick="sendCommand('close')" disabled>
                 <i class="fas fa-lock"></i>
                 <span class="label">닫기</span>
-            </button>
-        </div>
+                </button>
+            </div>
 
         <div class="notice">
             <p>
@@ -226,7 +226,7 @@
     <script>
         let isConnected = false;
         let token = null;
-
+        
         // URL에서 토큰 추출
         function getTokenFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -317,7 +317,7 @@
                     },
                     body: JSON.stringify({ command })
                 });
-
+                
                 const data = await response.json();
                 
                 if (data.success) {

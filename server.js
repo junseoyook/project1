@@ -426,15 +426,15 @@ app.post('/api/tokens/validate', async (req, res) => {
     const validation = validateToken(token);
     
     if (validation.isValid) {
-      res.json({
-        success: true,
+                res.json({ 
+                    success: true, 
         valid: true,
         remainingUses: validation.remainingUses,
         expiresIn: validation.expiresIn
-      });
+            });
     } else {
-      res.status(400).json({
-        success: false,
+        res.status(400).json({ 
+            success: false, 
         valid: false,
         message: validation.reason
       });
@@ -445,8 +445,8 @@ app.post('/api/tokens/validate', async (req, res) => {
       success: false,
       valid: false,
       message: '토큰 검증 중 오류가 발생했습니다.'
-    });
-  }
+        });
+    }
 });
 
 // 토큰 생성 API 엔드포인트
@@ -454,7 +454,7 @@ app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
   try {
     const { phoneNumber } = req.body;
     console.log('[토큰 생성] 요청 받음:', { phoneNumber });
-
+    
     if (!phoneNumber) {
       console.log('[토큰 생성] 전화번호 누락');
       return res.status(400).json({
@@ -796,7 +796,7 @@ async function generateBothTokens(phoneNumber, checkInDate, checkOutDate) {
     const parkingUrl = `${BASE_URL}/customer/${parkingToken}`;
     const doorUrl = `${BASE_URL}/customer/${doorToken}`;
     const { checkInTime, checkOutTime } = getTodayTomorrowTimeStrings();
-
+    
     const messageData = {
       message: {
         to: phoneNumber,
