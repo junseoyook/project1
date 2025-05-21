@@ -32,8 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (response.ok && data.success && data.parkingUrl) {
-                // 토큰이 포함된 URL로 리다이렉트
-                const token = data.parkingUrl.split('/').pop();
+                // 올바른 토큰만 추출
+                const urlObj = new URL(data.parkingUrl, window.location.origin);
+                const token = urlObj.searchParams.get('token');
                 window.location.href = `/parking.html?token=${token}`;
             } else {
                 issueMsg.textContent = data.message || data.error || '토큰 발급에 실패했습니다.';
