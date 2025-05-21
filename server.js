@@ -936,6 +936,40 @@ app.get('/api/device/status/:deviceId', (req, res) => {
   res.json({ status });
 });
 
+// 고객 셀프 발급: 전화번호 입력 시 바로 URL 반환 (카톡/문자 발송 없음)
+app.post('/api/customer-issue', async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) {
+      return res.json({ success: false, error: '전화번호가 필요합니다.' });
+    }
+    // 기존 토큰이 있으면 재사용, 없으면 새로 생성
+    let parkingToken;
+    for (const [token, data] of tokens.entries()) {
+      if (data.phoneNumber === phoneNumber && data.type === 'parking') {
+        parkingToken = token;
+        break;
+      }
+    }
+    if (!parkingToken) {
+      parkingToken = generateToken();
+      tokens.set(parkingToken, {
+        phoneNumber,
+        type: 'parking',
+        createdAt: new Date(),
+        expiryHours: 24,
+        useCount: 0,
+        lastUsed: null,
+        maxUses: 10
+      });
+    }
+    const parkingUrl = `${BASE_URL}/parking.html?token=${parkingToken}`;
+    return res.json({ success: true, parkingUrl });
+  } catch (e) {
+    return res.json({ success: false, error: '서버 오류' });
+  }
+});
+
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`서버 실행 중: 포트 ${PORT}`);

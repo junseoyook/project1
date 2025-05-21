@@ -143,20 +143,31 @@
 </head>
 <body>
     <div class="container">
-        <div class="location">스마트 주차장</div>
-        <div class="status-icon">🚗</div>
-        <div class="status-text">리모컨</div>
-        <div class="button-group">
-            <button class="remote-button open" data-command="open">
-                <span class="button-icon">↑</span>OPEN
-            </button>
-            <button class="remote-button close" data-command="close">
-                <span class="button-icon">↓</span>CLOSE
-            </button>
+        <!-- 셀프 발급 폼 -->
+        <div id="issueForm">
+            <div style="font-size:20px;font-weight:600;margin-bottom:16px;">주차장 리모컨 셀프 발급</div>
+            <input type="tel" id="customerPhone" placeholder="휴대폰 번호 (010-0000-0000)" style="width:100%;padding:12px;font-size:16px;border-radius:8px;border:1px solid #ccc;margin-bottom:12px;">
+            <button id="issueBtn" style="width:100%;padding:12px;font-size:16px;background:#007AFF;color:white;border:none;border-radius:8px;font-weight:600;">리모컨 발급 및 카톡 발송</button>
+            <div id="issueMsg" style="margin-top:10px;font-size:15px;color:#007AFF;"></div>
         </div>
-        <div id="ledIndicator"></div>
+        <!-- 기존 리모컨 UI: 발급 성공 시에만 표시 -->
+        <div id="remoteUI" style="display:none;">
+            <div class="location">스마트 주차장</div>
+            <div class="status-icon">🚗</div>
+            <div class="status-text">리모컨</div>
+            <div class="button-group">
+                <button class="remote-button open" data-command="open">
+                    <span class="button-icon">↑</span>OPEN
+                </button>
+                <button class="remote-button close" data-command="close">
+                    <span class="button-icon">↓</span>CLOSE
+                </button>
+            </div>
+            <div id="ledIndicator"></div>
+        </div>
     </div>
     <div id="connectionStatus"></div>
+    <script src="../scripts/customer-issue.js"></script>
     <script src="../scripts/remote.js"></script>
 </body>
 </html> 
