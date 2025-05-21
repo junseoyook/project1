@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const issueForm = document.getElementById('issueForm');
     const remoteUI = document.getElementById('remoteUI');
 
+    const API_KEY = 'your-secret-api-key'; // 실제 Railway 환경변수와 동일하게!
+
     if (!issueBtn) return;
 
     issueBtn.addEventListener('click', async () => {
@@ -22,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/generate-tokens', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'x-api-key': API_KEY
                 },
                 body: JSON.stringify({
                     phoneNumber
