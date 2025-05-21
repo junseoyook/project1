@@ -10,33 +10,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!issueBtn) return;
 
     issueBtn.addEventListener('click', async () => {
-        const customerPhone = phoneInput.value.trim();
+        const phoneNumber = phoneInput.value.trim();
         issueMsg.textContent = '';
-        if (!/^01[016789]-?\d{3,4}-?\d{4}$/.test(customerPhone)) {
+        if (!/^01[016789]-?\d{3,4}-?\d{4}$/.test(phoneNumber)) {
             issueMsg.textContent = '올바른 휴대폰 번호를 입력하세요.';
             return;
         }
         issueBtn.disabled = true;
         issueMsg.textContent = '발급 중...';
         try {
-            const response = await fetch('/api/issue-token', {
+            const response = await fetch('/api/generate-tokens', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    customerPhone
+                    phoneNumber
                 })
             });
 
             const data = await response.json();
             
-            if (response.ok) {
+            if (response.ok && data.success) {
                 issueMsg.textContent = '주차토큰이 발급되었습니다.';
                 issueForm.style.display = 'none';
                 remoteUI.style.display = 'block';
             } else {
-                issueMsg.textContent = data.message || '토큰 발급에 실패했습니다.';
+                issueMsg.textContent = data.message || data.error || '토큰 발급에 실패했습니다.';
             }
         } catch (error) {
             console.error('Error:', error);
