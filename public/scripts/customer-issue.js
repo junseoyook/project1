@@ -34,10 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             
-            if (response.ok && data.success) {
-                issueMsg.textContent = '주차토큰이 발급되었습니다.';
-                issueForm.style.display = 'none';
-                remoteUI.style.display = 'block';
+            if (response.ok && data.success && data.parkingUrl) {
+                window.location.href = data.parkingUrl;
             } else {
                 issueMsg.textContent = data.message || data.error || '토큰 발급에 실패했습니다.';
             }
