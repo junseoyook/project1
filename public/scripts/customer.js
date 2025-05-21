@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // 연결 상태 확인 함수
 async function checkConnection() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/control/${deviceId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/device/command/${deviceId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -52,7 +52,7 @@ async function sendCommand(command) {
         buttons.forEach(btn => btn.disabled = true);
         showConnectionStatus('명령 전송 중...', 'info');
         
-        const response = await fetch(`${API_BASE_URL}/api/control/${deviceId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/device/command/${deviceId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
