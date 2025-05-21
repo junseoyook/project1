@@ -7,11 +7,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --main-blue: #4f8cff;
-            --main-pink: #ff7eb9;
+            --main-blue: #007AFF;
+            --main-pink: #FF375F;
             --main-green: #34C759;
-            --main-gray: #f5f6fa;
+            --main-gray: #F2F2F7;
             --main-dark: #22223b;
+            --main-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 1.5px 8px rgba(0,0,0,0.04);
         }
 
         * {
@@ -32,51 +33,66 @@
             align-items: center;
         }
 
-        .cute-card {
+        .ios-remote {
             background: #fff;
-            border-radius: 32px;
-            box-shadow: 0 8px 32px rgba(79,140,255,0.08), 0 1.5px 8px rgba(0,0,0,0.04);
-            padding: 32px 24px 24px 24px;
-            max-width: 350px;
+            border-radius: 40px;
+            box-shadow: var(--main-shadow);
+            padding: 36px 24px 28px 24px;
+            max-width: 340px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-top: 40px;
+            border: 1.5px solid #e5e5ea;
+            position: relative;
         }
 
-        .cute-title {
-            font-size: 22px;
+        .ios-remote::before {
+            content: '';
+            position: absolute;
+            top: 18px; left: 50%;
+            transform: translateX(-50%);
+            width: 60px; height: 6px;
+            background: #e5e5ea;
+            border-radius: 3px;
+            opacity: 0.7;
+        }
+
+        .ios-title {
+            font-size: 20px;
             font-weight: 700;
             color: var(--main-dark);
-            margin-bottom: 8px;
+            margin-bottom: 18px;
             letter-spacing: -1px;
         }
 
-        .cute-car {
-            font-size: 48px;
-            margin-bottom: 8px;
+        .ios-remote-icon {
+            font-size: 44px;
+            margin-bottom: 10px;
         }
 
-        .cute-status {
-            font-size: 16px;
+        .ios-status {
+            font-size: 15px;
             font-weight: 500;
             margin-bottom: 18px;
             color: var(--main-blue);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            background: #f0f8ff;
+            border-radius: 12px;
+            padding: 7px 0;
+            width: 100%;
+            text-align: center;
         }
 
-        .cute-remote-btns {
+        .ios-remote-btns {
             display: flex;
-            gap: 18px;
+            gap: 22px;
             margin-bottom: 18px;
         }
 
-        .cute-btn {
-            width: 90px;
-            height: 90px;
+        .ios-btn {
+            width: 88px;
+            height: 88px;
             border-radius: 50%;
             border: none;
             font-size: 18px;
@@ -85,39 +101,64 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
             cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s;
             outline: none;
             position: relative;
+            background: linear-gradient(135deg, #fafdff 60%, #e5e5ea 100%);
         }
 
-        .cute-btn:active {
+        .ios-btn.open {
+            background: linear-gradient(135deg, #007AFF 60%, #a0e9ff 100%);
+            color: #fff;
+        }
+
+        .ios-btn.close {
+            background: linear-gradient(135deg, #FF375F 60%, #ffd6e0 100%);
+            color: #fff;
+        }
+
+        .ios-btn:active {
             transform: scale(0.96);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
         }
 
-        .cute-btn.open {
-            background: linear-gradient(135deg, #4f8cff 60%, #a0e9ff 100%);
-            color: #fff;
-        }
-
-        .cute-btn.close {
-            background: linear-gradient(135deg, #ff7eb9 60%, #ffe7fa 100%);
-            color: #fff;
-        }
-
-        .cute-btn:disabled {
+        .ios-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .cute-btn .emoji {
+        .ios-btn .sficon {
             font-size: 32px;
             margin-bottom: 4px;
         }
 
-        .cute-notice {
+        .ios-gauge {
+            width: 64px;
+            height: 64px;
+            margin: 18px auto 8px auto;
+            position: relative;
+            display: none;
+        }
+
+        .ios-gauge svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .ios-gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15px;
+            font-weight: 700;
+            color: #007AFF;
+        }
+
+        .ios-notice {
             background: #fffbe7;
             color: #ff9500;
             border-radius: 12px;
@@ -127,33 +168,11 @@
             text-align: center;
         }
 
-        .cute-expiry {
+        .ios-expiry {
             color: #888;
             font-size: 13px;
             margin-top: 8px;
             text-align: center;
-        }
-
-        .cute-gauge {
-            width: 64px;
-            height: 64px;
-            margin: 18px auto 8px auto;
-            position: relative;
-            display: none;
-        }
-        .cute-gauge svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-        .cute-gauge-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 15px;
-            font-weight: 700;
-            color: #4f8cff;
         }
 
         @media (display-mode: standalone) {
@@ -168,29 +187,29 @@
     </style>
 </head>
 <body>
-    <div class="cute-card">
-        <div class="cute-car">🚗</div>
-        <div class="cute-title">주차장 리모컨</div>
-        <div id="cuteStatus" class="cute-status">상태 확인 중...</div>
-        <div class="cute-gauge" id="cuteGauge">
+    <div class="ios-remote">
+        <div class="ios-title">리모컨</div>
+        <div class="ios-remote-icon">🛂</div>
+        <div id="iosStatus" class="ios-status">상태 확인 중...</div>
+        <div class="ios-gauge" id="iosGauge">
             <svg>
                 <circle cx="32" cy="32" r="28" stroke="#e0e0e0" stroke-width="8" fill="none" />
-                <circle id="gaugeBar" cx="32" cy="32" r="28" stroke="#4f8cff" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" />
+                <circle id="gaugeBar" cx="32" cy="32" r="28" stroke="#007AFF" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" />
             </svg>
-            <div class="cute-gauge-text" id="gaugeText">0%</div>
+            <div class="ios-gauge-text" id="gaugeText">0%</div>
         </div>
-        <div class="cute-remote-btns">
-            <button id="openButton" class="cute-btn open" onclick="sendCommand('open')" disabled>
-                <span class="emoji">🔓</span>
+        <div class="ios-remote-btns">
+            <button id="openButton" class="ios-btn open" onclick="sendCommand('open')" disabled>
+                <span class="sficon">􀎧</span>
                 열기
             </button>
-            <button id="closeButton" class="cute-btn close" onclick="sendCommand('close')" disabled>
-                <span class="emoji">🔒</span>
+            <button id="closeButton" class="ios-btn close" onclick="sendCommand('close')" disabled>
+                <span class="sficon">􀎩</span>
                 닫기
             </button>
         </div>
-        <div class="cute-notice">입차 후 <b>반드시 닫힘 버튼</b>을 눌러주세요!</div>
-        <div class="cute-expiry">이 링크는 숙박기간동안만 유효하고 그 이후에는 만료됩니다.</div>
+        <div class="ios-notice">입차 후 <b>반드시 닫힘 버튼</b>을 눌러주세요!</div>
+        <div class="ios-expiry">이 링크는 숙박기간동안만 유효하고 그 이후에는 만료됩니다.</div>
     </div>
 
     <script>
@@ -237,9 +256,9 @@
 
         // 에러 메시지 표시
         function showError(message) {
-            const cuteStatus = document.getElementById('cuteStatus');
-            cuteStatus.textContent = message;
-            cuteStatus.style.color = '#FF3B30';
+            const iosStatus = document.getElementById('iosStatus');
+            iosStatus.textContent = message;
+            iosStatus.style.color = '#FF375F';
             document.getElementById('openButton').disabled = true;
             document.getElementById('closeButton').disabled = true;
         }
@@ -248,7 +267,7 @@
         async function checkConnection() {
             if (!await validateToken()) return;
 
-            const cuteStatus = document.getElementById('cuteStatus');
+            const iosStatus = document.getElementById('iosStatus');
             
             try {
                 const response = await fetch('/api/device/command/ESP32_001', {
@@ -259,7 +278,7 @@
                 
                 if (data.command === 'open' || data.command === 'close' || data.command === null) {
                     isConnected = true;
-                    cuteStatus.innerHTML = '<span style="color:#34C759;">🟢 연결됨</span>';
+                    iosStatus.innerHTML = '<span style="color:#34C759;">🟢 연결됨</span>';
                     document.getElementById('openButton').disabled = false;
                     document.getElementById('closeButton').disabled = false;
                 } else {
@@ -267,7 +286,7 @@
                 }
             } catch (error) {
                 isConnected = false;
-                cuteStatus.innerHTML = '<span style="color:#FF3B30;">🔴 서버 연결 실패</span>';
+                iosStatus.innerHTML = '<span style="color:#FF375F;">🔴 서버 연결 실패</span>';
                 document.getElementById('openButton').disabled = true;
                 document.getElementById('closeButton').disabled = true;
                 setTimeout(checkConnection, 5000);
@@ -279,17 +298,17 @@
             try {
                 const response = await fetch('/api/device/status/ESP32_001');
                 const data = await response.json();
-                const cuteStatus = document.getElementById('cuteStatus');
+                const iosStatus = document.getElementById('iosStatus');
                 if (data.status === 'opened') {
-                    cuteStatus.innerHTML = '<span style="color:#4f8cff;">🚦 현재 상태: <b>열림</b></span>';
+                    iosStatus.innerHTML = '<span style="color:#007AFF;">🚦 현재 상태: <b>열림</b></span>';
                 } else if (data.status === 'closed') {
-                    cuteStatus.innerHTML = '<span style="color:#ff7eb9;">🚦 현재 상태: <b>닫힘</b></span>';
+                    iosStatus.innerHTML = '<span style="color:#FF375F;">🚦 현재 상태: <b>닫힘</b></span>';
                 } else {
-                    cuteStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
+                    iosStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
                 }
             } catch (e) {
-                const cuteStatus = document.getElementById('cuteStatus');
-                cuteStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
+                const iosStatus = document.getElementById('iosStatus');
+                iosStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
             }
         }
 
@@ -299,11 +318,11 @@
                 alert('게이트와 연결되어 있지 않습니다.');
                 return;
             }
-            const cuteStatus = document.getElementById('cuteStatus');
+            const iosStatus = document.getElementById('iosStatus');
             const activeButton = command === 'open' ? 'openButton' : 'closeButton';
             // 게이지 애니메이션 시작
             showGauge();
-            cuteStatus.innerHTML = '<span style="color:#4f8cff;">차단기 동작 중입니다...<br>잠시만 기다려주세요!</span>';
+            iosStatus.innerHTML = '<span style="color:#007AFF;">차단기 동작 중입니다...<br>잠시만 기다려주세요!</span>';
             document.getElementById('openButton').disabled = true;
             document.getElementById('closeButton').disabled = true;
             // 명령 즉시 전송
@@ -322,7 +341,7 @@
                 }
             } catch (error) {
                 hideGauge();
-                cuteStatus.innerHTML = '<span style="color:#FF3B30;">' + error.message + '</span>';
+                iosStatus.innerHTML = '<span style="color:#FF375F;">' + error.message + '</span>';
                 return;
             } finally {
                 setTimeout(() => {
@@ -342,11 +361,11 @@
 
         // 게이지 관련 함수
         function showGauge() {
-            document.getElementById('cuteGauge').style.display = 'block';
+            document.getElementById('iosGauge').style.display = 'block';
             setGauge(0);
         }
         function hideGauge() {
-            document.getElementById('cuteGauge').style.display = 'none';
+            document.getElementById('iosGauge').style.display = 'none';
         }
         function setGauge(percent) {
             const bar = document.getElementById('gaugeBar');
