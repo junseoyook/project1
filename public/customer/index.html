@@ -5,118 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주차장 리모컨</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        :root {
+            --main-yellow: #ffe066;
+            --main-dark: #22223b;
+            --main-gray: #f7f7f7;
+            --main-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 1.5px 8px rgba(0,0,0,0.04);
+            --btn-open: #ffd60a;
+            --btn-close: #ff6f61;
         }
-
         body {
-            background-color: #f5f5f7;
+            background: var(--main-yellow);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
-
         .container {
-            background: white;
+            background: #fffbe6;
             border-radius: 24px;
-            padding: 30px;
+            padding: 32px 20px 28px 20px;
             width: 100%;
-            max-width: 320px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            max-width: 340px;
+            box-shadow: var(--main-shadow);
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
         }
-
         .location {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
+            font-size: 15px;
+            color: #888;
+            margin-bottom: 8px;
         }
-
         .status-icon {
-            font-size: 48px;
-            margin: 20px 0;
+            font-size: 44px;
+            margin-bottom: 8px;
         }
-
         .status-text {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 30px;
-            color: #1c1c1e;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: var(--main-dark);
         }
-
         .button-group {
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 18px;
+            margin-bottom: 18px;
         }
-
         .remote-button {
             width: 100%;
-            padding: 16px;
+            height: 54px;
+            border-radius: 14px;
             border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
+            transition: all 0.2s;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
         }
-
         .remote-button.open {
-            background: #007AFF;
-            color: white;
+            background: var(--btn-open);
+            color: #222;
         }
-
         .remote-button.close {
-            background: #FF3B30;
-            color: white;
+            background: var(--btn-close);
+            color: #fff;
         }
-
+        .remote-button:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
         .remote-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-
-        .remote-button:not(:disabled):hover {
-            transform: translateY(-2px);
-        }
-
-        .remote-button:not(:disabled):active {
-            transform: scale(0.98);
-        }
-
         #ledIndicator {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 18px;
+            right: 18px;
             background-color: #ff0000;
             box-shadow: 0 0 5px #ff0000;
             transition: all 0.3s ease;
         }
-
         #ledIndicator.active {
             animation: pulse 1s infinite;
         }
-
         @keyframes pulse {
             0% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.2); opacity: 0.8; }
             100% { transform: scale(1); opacity: 1; }
         }
-
         #connectionStatus {
             position: fixed;
             bottom: 20px;
@@ -130,22 +115,18 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
         #connectionStatus.show {
             opacity: 1;
         }
-
         .button-icon {
             font-size: 20px;
             margin-right: 8px;
         }
-
         /* 발급 폼 스타일 */
         #issueForm {
             width: 100%;
             text-align: center;
         }
-
         #issueForm input {
             width: 100%;
             padding: 12px;
@@ -154,7 +135,6 @@
             border: 1px solid #ccc;
             margin-bottom: 12px;
         }
-
         #issueForm button {
             width: 100%;
             padding: 12px;
@@ -166,7 +146,6 @@
             font-weight: 600;
             cursor: pointer;
         }
-
         #issueMsg {
             margin-top: 10px;
             font-size: 15px;
@@ -184,16 +163,16 @@
             <div id="issueMsg" style="margin-top:10px;font-size:15px;color:#007AFF;"></div>
         </div>
         <!-- 기존 리모컨 UI: 발급 성공 시에만 표시 -->
-        <div id="remoteUI" style="display:none;">
+        <div id="remoteUI" style="display:none; width:100%; flex-direction:column; align-items:center;">
             <div class="location">스마트 주차장</div>
             <div class="status-icon">🚗</div>
-            <div class="status-text">리모컨</div>
+            <div class="status-text">주차장 리모컨</div>
             <div class="button-group">
                 <button class="remote-button open" data-command="open">
-                    <span class="button-icon">↑</span>OPEN
+                    <span class="button-icon">↑</span>열기
                 </button>
                 <button class="remote-button close" data-command="close">
-                    <span class="button-icon">↓</span>CLOSE
+                    <span class="button-icon">↓</span>닫기
                 </button>
             </div>
             <div id="ledIndicator"></div>
