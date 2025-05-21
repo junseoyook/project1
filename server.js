@@ -291,7 +291,7 @@ async function sendKakaoNotification(phoneNumber, parkingToken) {
           pfId: SOLAPI_PFID,
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            "#{customerName}": ,
+            "#{customerName}": "",
             "#{pariking Url}": parkingUrl,
             "#{entry Url}": "비밀번호: 1234*",
             "#{checkInTime}": checkInTime,
@@ -805,7 +805,7 @@ async function generateBothTokens(phoneNumber, checkInDate, checkOutDate) {
           pfId: SOLAPI_PFID,
           templateId: "KA01TP250418063541272b3uS4NHhfLo",
           variables: {
-            "#{customerName}": "고객님",
+            "#{customerName}": "",
             "#{parkingUrl}": parkingUrl,
             "#{doorUrl}": doorUrl,
             "#{checkInTime}": checkInTime,
