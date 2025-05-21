@@ -134,6 +134,28 @@
             text-align: center;
         }
 
+        .cute-gauge {
+            width: 64px;
+            height: 64px;
+            margin: 18px auto 8px auto;
+            position: relative;
+            display: none;
+        }
+        .cute-gauge svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .cute-gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15px;
+            font-weight: 700;
+            color: #4f8cff;
+        }
+
         @media (display-mode: standalone) {
             .status-bar {
                 padding-top: env(safe-area-inset-top);
@@ -150,6 +172,13 @@
         <div class="cute-car">🚗</div>
         <div class="cute-title">주차장 리모컨</div>
         <div id="cuteStatus" class="cute-status">상태 확인 중...</div>
+        <div class="cute-gauge" id="cuteGauge">
+            <svg>
+                <circle cx="32" cy="32" r="28" stroke="#e0e0e0" stroke-width="8" fill="none" />
+                <circle id="gaugeBar" cx="32" cy="32" r="28" stroke="#4f8cff" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" />
+            </svg>
+            <div class="cute-gauge-text" id="gaugeText">0%</div>
+        </div>
         <div class="cute-remote-btns">
             <button id="openButton" class="cute-btn open" onclick="sendCommand('open')" disabled>
                 <span class="emoji">🔓</span>
@@ -270,51 +299,77 @@
                 alert('게이트와 연결되어 있지 않습니다.');
                 return;
             }
-
             const cuteStatus = document.getElementById('cuteStatus');
             const activeButton = command === 'open' ? 'openButton' : 'closeButton';
-            
+            // 게이지 애니메이션 시작
+            showGauge();
+            cuteStatus.innerHTML = '<span style="color:#4f8cff;">차단기 동작 중입니다...<br>잠시만 기다려주세요!</span>';
+            document.getElementById('openButton').disabled = true;
+            document.getElementById('closeButton').disabled = true;
+            // 명령 즉시 전송
             try {
-                document.getElementById('openButton').disabled = true;
-                document.getElementById('closeButton').disabled = true;
-                cuteStatus.innerHTML = '명령 전송 중...';
-
                 document.getElementById(activeButton).style.transform = 'scale(0.96)';
-
                 const response = await fetch('/api/device/command/ESP32_001', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ command })
                 });
-
                 const data = await response.json();
-                
                 if (data.success) {
-                    cuteStatus.innerHTML = '<span style="color:#34C759;">명령이 전송되었습니다!</span>';
-                    if ('vibrate' in navigator) {
-                        navigator.vibrate(50);
-                    }
-                    // 명령 성공 후 상태 갱신 (여러 번 폴링)
-                    await updateBarrierState();
-                    await validateToken();
-                    // 0.5초, 1초, 1.5초, 2초 후 상태를 반복적으로 갱신
-                    [500, 1000, 1500, 2000].forEach(delay => setTimeout(updateBarrierState, delay));
+                    if ('vibrate' in navigator) navigator.vibrate(50);
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
                 }
             } catch (error) {
+                hideGauge();
                 cuteStatus.innerHTML = '<span style="color:#FF3B30;">' + error.message + '</span>';
+                return;
             } finally {
                 setTimeout(() => {
                     document.getElementById(activeButton).style.transform = 'scale(1)';
                 }, 400);
-
-                setTimeout(() => {
-                    checkConnection();
-                }, 3000);
             }
+            // 3초간 게이지 애니메이션 후 상태 갱신
+            animateGauge(3000, async () => {
+                hideGauge();
+                await updateBarrierState();
+                await validateToken();
+                [500, 1000, 1500, 2000].forEach(delay => setTimeout(updateBarrierState, delay));
+                document.getElementById('openButton').disabled = false;
+                document.getElementById('closeButton').disabled = false;
+            });
+        }
+
+        // 게이지 관련 함수
+        function showGauge() {
+            document.getElementById('cuteGauge').style.display = 'block';
+            setGauge(0);
+        }
+        function hideGauge() {
+            document.getElementById('cuteGauge').style.display = 'none';
+        }
+        function setGauge(percent) {
+            const bar = document.getElementById('gaugeBar');
+            const text = document.getElementById('gaugeText');
+            const dash = 176;
+            bar.setAttribute('stroke-dashoffset', dash - dash * percent / 100);
+            text.textContent = Math.round(percent) + '%';
+        }
+        function animateGauge(duration, cb) {
+            let start = null;
+            function step(ts) {
+                if (!start) start = ts;
+                const elapsed = ts - start;
+                const percent = Math.min(100, (elapsed / duration) * 100);
+                setGauge(percent);
+                if (elapsed < duration) {
+                    requestAnimationFrame(step);
+                } else {
+                    setGauge(100);
+                    if (cb) cb();
+                }
+            }
+            requestAnimationFrame(step);
         }
 
         // 페이지 로드 시 토큰 검증 및 연결 상태 확인
