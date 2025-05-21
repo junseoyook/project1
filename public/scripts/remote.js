@@ -1,8 +1,15 @@
-const API_URL = 'https://project1-production-f338.up.railway.app';
+const API_URL = '';
 const DEVICE_ID = 'ESP32_001';
+let isConnected = false;
+let token = null;
 const CONTROL_KEY = 'your-control-key';  // 실제 운영시에는 안전한 방법으로 관리 필요
 const ledIndicator = document.getElementById('ledIndicator');
-let isConnected = false;
+
+// URL에서 토큰 추출
+function getTokenFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('token');
+}
 
 async function sendCommand(command, buttonElement) {
     if (!isConnected) {
@@ -12,15 +19,13 @@ async function sendCommand(command, buttonElement) {
 
     try {
         ledIndicator.classList.add('active');
-        const response = await fetch(`${API_URL}/api/control/${DEVICE_ID}`, {
+        const response = await fetch(`/api/device/command/${DEVICE_ID}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'x-access-token': token
             },
-            body: JSON.stringify({ 
-                command: command,
-                key: CONTROL_KEY
-            })
+            body: JSON.stringify({ command })
         });
 
         const data = await response.json();
@@ -64,15 +69,11 @@ function showConnectionStatus(message) {
 
 async function checkConnection() {
     try {
-        const response = await fetch(`${API_URL}/api/control/${DEVICE_ID}`, {
-            method: 'POST',
+        const response = await fetch(`/api/device/command/${DEVICE_ID}`, {
+            method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                command: 'status',
-                key: CONTROL_KEY
-            })
+                'x-access-token': token
+            }
         });
 
         const data = await response.json();
@@ -102,6 +103,13 @@ async function checkConnection() {
 
 // 페이지 로드시 연결 확인 시작
 document.addEventListener('DOMContentLoaded', () => {
+    // 토큰 가져오기
+    token = getTokenFromUrl();
+    if (!token) {
+        showConnectionStatus('유효하지 않은 접근입니다.');
+        return;
+    }
+
     // 버튼 초기 비활성화
     document.querySelectorAll('.remote-button').forEach(btn => {
         btn.disabled = true;

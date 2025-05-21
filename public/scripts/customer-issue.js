@@ -7,8 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const issueForm = document.getElementById('issueForm');
     const remoteUI = document.getElementById('remoteUI');
 
-    const API_KEY = 'your-secret-api-key'; // 실제 Railway 환경변수와 동일하게!
-
     if (!issueBtn) return;
 
     issueBtn.addEventListener('click', async () => {
@@ -24,8 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/generate-tokens', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': API_KEY
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     phoneNumber
@@ -35,7 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (response.ok && data.success && data.parkingUrl) {
-                window.location.href = data.parkingUrl;
+                // 토큰이 포함된 URL로 리다이렉트
+                const token = data.parkingUrl.split('/').pop();
+                window.location.href = `/parking.html?token=${token}`;
             } else {
                 issueMsg.textContent = data.message || data.error || '토큰 발급에 실패했습니다.';
             }

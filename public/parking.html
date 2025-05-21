@@ -4,100 +4,146 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>주차장 리모컨</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --main-yellow: #ffe066;
+            --main-blue: #007AFF;
+            --main-red: #FF3B30;
+            --main-gray: #F2F2F7;
             --main-dark: #22223b;
-            --main-gray: #f7f7f7;
             --main-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 1.5px 8px rgba(0,0,0,0.04);
-            --btn-open: #ffd60a;
-            --btn-close: #ff6f61;
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
         body {
-            background: var(--main-yellow);
+            background: var(--main-gray);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-        .remote-card {
-            background: #fffbe6;
-            border-radius: 24px;
+
+        .ios-card {
+            background: #fff;
+            border-radius: 16px;
             box-shadow: var(--main-shadow);
-            padding: 32px 20px 28px 20px;
-            max-width: 340px;
+            padding: 24px 16px;
+            max-width: 350px;
             width: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: stretch;
+            margin-top: 40px;
+            border: 1px solid #e5e5ea;
         }
-        .status-label {
+
+        .ios-title {
             font-size: 18px;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--main-dark);
-            margin-bottom: 18px;
+            margin-bottom: 24px;
             text-align: center;
         }
-        .status-value {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 28px;
-            color: #222;
-            text-align: center;
-        }
-        .remote-btn {
-            width: 90%;
-            height: 54px;
-            border-radius: 14px;
+
+        .ios-btn {
+            width: 100%;
+            height: 56px;
+            border-radius: 12px;
             border: none;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
             outline: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            margin-bottom: 16px;
         }
-        .remote-btn.open {
-            background: var(--btn-open);
-            color: #222;
+
+        .ios-btn.open {
+            background: var(--main-blue);
+            color: #fff;
         }
-        .remote-btn.close {
-            background: var(--btn-close);
+
+        .ios-btn.close {
+            background: var(--main-red);
             color: #fff;
             margin-bottom: 0;
         }
-        .remote-btn:active {
-            transform: scale(0.97);
+
+        .ios-btn:active {
+            transform: scale(0.98);
             opacity: 0.9;
         }
-        .remote-btn:disabled {
+
+        .ios-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        .car-emoji {
-            font-size: 44px;
-            margin-bottom: 10px;
+
+        .ios-status {
+            font-size: 15px;
+            font-weight: 500;
+            margin: 16px 0;
+            color: var(--main-blue);
+            text-align: center;
+        }
+
+        .ios-notice {
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .ios-expiry {
+            color: #888;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        @media (display-mode: standalone) {
+            .status-bar {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            .container {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="remote-card">
-        <div class="car-emoji">🚗</div>
-        <div class="status-label">주차장 리모컨</div>
-        <div id="statusValue" class="status-value">상태 확인 중...</div>
-        <button id="openButton" class="remote-btn open" onclick="sendCommand('open')" disabled>열기</button>
-        <button id="closeButton" class="remote-btn close" onclick="sendCommand('close')" disabled>닫기</button>
+    <div class="ios-card">
+        <div class="ios-title">주차장 리모컨</div>
+        <button id="openButton" class="ios-btn open" onclick="sendCommand('open')" disabled>열기</button>
+        <div id="iosStatus" class="ios-status">상태 확인 중...</div>
+        <button id="closeButton" class="ios-btn close" onclick="sendCommand('close')" disabled>닫기</button>
+        <div class="ios-notice">입차 후 반드시 닫기 버튼을 눌러주세요</div>
+        <div class="ios-expiry">이 링크는 숙박기간동안만 유효하고 그 이후에는 만료됩니다.</div>
     </div>
+
     <script>
         let isConnected = false;
         let token = null;
+
         // URL에서 토큰 추출
         function getTokenFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('token');
         }
+
         // 토큰 검증
         async function validateToken() {
             token = getTokenFromUrl();
@@ -105,82 +151,102 @@
                 showError('토큰이 없습니다. 올바른 링크로 접근해주세요.');
                 return false;
             }
+
             try {
                 const response = await fetch('/api/tokens/validate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ token })
                 });
+
                 const data = await response.json();
+                
                 if (!data.success || !data.valid) {
                     throw new Error(data.message || '토큰이 유효하지 않습니다.');
                 }
+
+                // 남은 사용 횟수와 만료 시간 표시 (항상 상단에 표시)
+                // updateQuotaStatus(data.remainingUses, data.expiresIn);
                 return true;
             } catch (error) {
                 showError(error.message);
                 return false;
             }
         }
+
         // 에러 메시지 표시
         function showError(message) {
-            const statusValue = document.getElementById('statusValue');
-            statusValue.textContent = message;
-            statusValue.style.color = '#FF3B30';
+            const iosStatus = document.getElementById('iosStatus');
+            iosStatus.textContent = message;
+            iosStatus.style.color = '#FF3B30';
             document.getElementById('openButton').disabled = true;
             document.getElementById('closeButton').disabled = true;
         }
-        // 연결 상태 확인 및 상태 표시
+
+        // 연결 상태 확인
         async function checkConnection() {
             if (!await validateToken()) return;
-            const statusValue = document.getElementById('statusValue');
+
+            const iosStatus = document.getElementById('iosStatus');
+            
             try {
-                const response = await fetch('/api/device/command/ESP32_001', { method: 'GET' });
+                const response = await fetch('/api/device/command/ESP32_001', {
+                    method: 'GET',
+                });
+
                 const data = await response.json();
-                isConnected = true;
-                document.getElementById('openButton').disabled = false;
-                document.getElementById('closeButton').disabled = false;
-                // barrier 상태도 같이 표시
-                updateBarrierState();
+                
+                if (data.command === 'open' || data.command === 'close' || data.command === null) {
+                    isConnected = true;
+                    iosStatus.innerHTML = '<span style="color:#34C759;">🟢 연결됨</span>';
+                    document.getElementById('openButton').disabled = false;
+                    document.getElementById('closeButton').disabled = false;
+                    } else {
+                    throw new Error('연결 실패');
+                    }
             } catch (error) {
                 isConnected = false;
-                statusValue.textContent = '🔴 서버 연결 실패';
-                statusValue.style.color = '#FF3B30';
+                iosStatus.innerHTML = '<span style="color:#FF3B30;">🔴 서버 연결 실패</span>';
                 document.getElementById('openButton').disabled = true;
                 document.getElementById('closeButton').disabled = true;
                 setTimeout(checkConnection, 5000);
             }
         }
+
         // 차단기 상태 표시 함수
         async function updateBarrierState() {
             try {
                 const response = await fetch('/api/device/status/ESP32_001');
                 const data = await response.json();
-                const statusValue = document.getElementById('statusValue');
+                const iosStatus = document.getElementById('iosStatus');
                 if (data.status === 'opened') {
-                    statusValue.textContent = '🚦 현재 상태: 열림';
-                    statusValue.style.color = '#007AFF';
+                    iosStatus.innerHTML = '<span style="color:#007AFF;">🚦 현재 상태: <b>열림</b></span>';
                 } else if (data.status === 'closed') {
-                    statusValue.textContent = '🚦 현재 상태: 닫힘';
-                    statusValue.style.color = '#222';
-                } else {
-                    statusValue.textContent = '🚦 현재 상태: 알 수 없음';
-                    statusValue.style.color = '#888';
+                    iosStatus.innerHTML = '<span style="color:#FF3B30;">🚦 현재 상태: <b>닫힘</b></span>';
+            } else {
+                    iosStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
                 }
             } catch (e) {
-                const statusValue = document.getElementById('statusValue');
-                statusValue.textContent = '상태 확인 실패';
-                statusValue.style.color = '#888';
+                const iosStatus = document.getElementById('iosStatus');
+                iosStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
             }
         }
+
         // 명령 전송
         async function sendCommand(command) {
             if (!isConnected) {
                 alert('게이트와 연결되어 있지 않습니다.');
                 return;
             }
-            const statusValue = document.getElementById('statusValue');
+            const iosStatus = document.getElementById('iosStatus');
+            const activeButton = command === 'open' ? 'openButton' : 'closeButton';
+            iosStatus.innerHTML = '<span style="color:#007AFF;">차단기 동작 중입니다...<br>잠시만 기다려주세요!</span>';
+            document.getElementById('openButton').disabled = true;
+            document.getElementById('closeButton').disabled = true;
             try {
-                statusValue.textContent = (command === 'open' ? '차단기 열기 동작 중...' : '차단기 닫기 동작 중...');
+                document.getElementById(activeButton).style.transform = 'scale(0.97)';
                 const response = await fetch('/api/device/command/ESP32_001', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -189,21 +255,38 @@
                 const data = await response.json();
                 if (data.success) {
                     if ('vibrate' in navigator) navigator.vibrate(50);
-                    setTimeout(updateBarrierState, 1000);
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
                 }
             } catch (error) {
-                statusValue.textContent = error.message;
-                statusValue.style.color = '#FF3B30';
+                iosStatus.innerHTML = '<span style="color:#FF3B30;">' + error.message + '</span>';
+                return;
+            } finally {
+                setTimeout(() => {
+                    document.getElementById(activeButton).style.transform = 'scale(1)';
+                }, 400);
             }
+            setTimeout(async () => {
+                await updateBarrierState();
+                await validateToken();
+                [500, 1000, 1500, 2000].forEach(delay => setTimeout(updateBarrierState, delay));
+                document.getElementById('openButton').disabled = false;
+                document.getElementById('closeButton').disabled = false;
+            }, 3000);
         }
+
         // 페이지 로드 시 토큰 검증 및 연결 상태 확인
         document.addEventListener('DOMContentLoaded', async () => {
             if (await validateToken()) {
                 checkConnection();
+                updateBarrierState();
             }
         });
+
+        // PWA 상태바 처리
+        if (window.navigator.standalone) {
+            document.documentElement.style.setProperty('--safe-area-inset-top', '44px');
+        }
     </script>
 </body>
 </html> 
