@@ -450,7 +450,7 @@ app.post('/api/tokens/validate', async (req, res) => {
 });
 
 // 토큰 생성 API 엔드포인트
-app.post('/api/generate-tokens', validateApiKey, async (req, res) => {
+app.post('/api/generate-tokens', async (req, res) => {
   try {
     const { phoneNumber } = req.body;
     console.log('[토큰 생성] 요청 받음:', { phoneNumber });
