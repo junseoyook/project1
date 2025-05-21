@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --ios-blue: #007AFF;
-            --ios-red: #FF3B30;
-            --ios-gray: #8E8E93;
-            --ios-light-gray: #F2F2F7;
-            --ios-border: rgba(0, 0, 0, 0.1);
+            --main-blue: #4f8cff;
+            --main-pink: #ff7eb9;
+            --main-green: #34C759;
+            --main-gray: #f5f6fa;
+            --main-dark: #22223b;
         }
 
         * {
@@ -24,162 +24,114 @@
         }
 
         body {
-            background: #000;
+            background: var(--main-gray);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        .status-bar {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 16px;
-            padding-top: max(12px, env(safe-area-inset-top));
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            border-bottom: 1px solid var(--ios-border);
+            align-items: center;
         }
 
-        .status-bar h1 {
-            font-size: 17px;
-            font-weight: 600;
-            color: #000;
-        }
-
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
-            background: var(--ios-gray);
-            transition: background-color 0.3s ease;
-        }
-
-        .status-connected {
-            background: #34C759;
-        }
-
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
-            background: #000;
-        }
-
-        .status-message {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 16px;
-            text-align: center;
-            font-size: 15px;
-            font-weight: 500;
-            margin-bottom: 32px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .remote-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .btn-control {
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            height: 140px;
+        .cute-card {
+            background: #fff;
+            border-radius: 32px;
+            box-shadow: 0 8px 32px rgba(79,140,255,0.08), 0 1.5px 8px rgba(0,0,0,0.04);
+            padding: 32px 24px 24px 24px;
+            max-width: 350px;
+            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            margin-top: 40px;
         }
 
-        .btn-control::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            border-radius: 24px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .cute-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--main-dark);
+            margin-bottom: 8px;
+            letter-spacing: -1px;
         }
 
-        .btn-control:active:not(:disabled)::before {
-            opacity: 1;
-        }
-
-        .btn-control:disabled {
-            opacity: 0.5;
-        }
-
-        .btn-control i {
+        .cute-car {
             font-size: 48px;
-            color: #fff;
+            margin-bottom: 8px;
         }
 
-        .btn-control .label {
-            color: #fff;
-            font-size: 17px;
+        .cute-status {
+            font-size: 16px;
             font-weight: 500;
+            margin-bottom: 18px;
+            color: var(--main-blue);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .btn-open i {
-            color: var(--ios-blue);
+        .cute-remote-btns {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 18px;
         }
 
-        .btn-close i {
-            color: var(--ios-red);
+        .cute-btn {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            outline: none;
+            position: relative;
         }
 
-        .notice {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 16px;
-            margin-top: auto;
+        .cute-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
         }
 
-        .notice p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
-            line-height: 1.4;
+        .cute-btn.open {
+            background: linear-gradient(135deg, #4f8cff 60%, #a0e9ff 100%);
+            color: #fff;
+        }
+
+        .cute-btn.close {
+            background: linear-gradient(135deg, #ff7eb9 60%, #ffe7fa 100%);
+            color: #fff;
+        }
+
+        .cute-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .cute-btn .emoji {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+
+        .cute-notice {
+            background: #fffbe7;
+            color: #ff9500;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 14px;
+            margin-bottom: 10px;
             text-align: center;
         }
 
-        @keyframes unlock {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-5px) scale(1.1); }
-            100% { transform: translateY(0) scale(1); }
-        }
-
-        @keyframes lock {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(5px) scale(1.1); }
-            100% { transform: translateY(0) scale(1); }
-        }
-
-        .animate-unlock i {
-            animation: unlock 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .animate-lock i {
-            animation: lock 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        .cute-expiry {
+            color: #888;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
         }
 
         @media (display-mode: standalone) {
@@ -194,37 +146,22 @@
     </style>
 </head>
 <body>
-    <div class="status-bar">
-        <span id="statusLed" class="status-indicator"></span>
-        <h1>주차장 리모컨</h1>
-    </div>
-    
-    <div class="container">
-        <div id="statusMessage" class="status-message">
-            연결 상태 확인 중...
-        </div>
-        <div id="barrierState" class="status-message" style="background:rgba(0,122,255,0.08);color:#007AFF;font-size:16px;margin-bottom:16px;"></div>
-        <div id="quotaStatus" class="status-message" style="background:rgba(52,199,89,0.08);color:#34C759;font-size:16px;margin-bottom:16px;display:none;"></div>
-
-        <div class="remote-buttons">
-            <button id="openButton" class="btn-control btn-open" onclick="sendCommand('open')" disabled>
-                <i class="fas fa-unlock"></i>
-                <span class="label">열기</span>
+    <div class="cute-card">
+        <div class="cute-car">🚗</div>
+        <div class="cute-title">주차장 리모컨</div>
+        <div id="cuteStatus" class="cute-status">상태 확인 중...</div>
+        <div class="cute-remote-btns">
+            <button id="openButton" class="cute-btn open" onclick="sendCommand('open')" disabled>
+                <span class="emoji">🔓</span>
+                열기
             </button>
-            <button id="closeButton" class="btn-control btn-close" onclick="sendCommand('close')" disabled>
-                <i class="fas fa-lock"></i>
-                <span class="label">닫기</span>
+            <button id="closeButton" class="cute-btn close" onclick="sendCommand('close')" disabled>
+                <span class="emoji">🔒</span>
+                닫기
             </button>
         </div>
-        <div class="status-message" style="background:rgba(255, 149, 0, 0.10);color:#ff9500;font-size:15px;margin-bottom:16px;">
-            입차후 반드시 닫힘 버튼을 눌러주시기 바랍니다.
-        </div>
-
-        <div class="notice">
-            <p>
-                이 링크는 숙박기간동안만 유효하고 그 이후에는 만료됩니다.
-            </p>
-        </div>
+        <div class="cute-notice">입차 후 <b>반드시 닫힘 버튼</b>을 눌러주세요!</div>
+        <div class="cute-expiry">이 링크는 숙박기간동안만 유효하고 그 이후에는 만료됩니다.</div>
     </div>
 
     <script>
@@ -271,27 +208,18 @@
 
         // 에러 메시지 표시
         function showError(message) {
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = message;
-            statusMessage.style.color = '#FF3B30';
-            statusMessage.style.background = 'rgba(255, 59, 48, 0.1)';
-            
-            // 버튼 비활성화
-            const buttons = document.querySelectorAll('.btn-control');
-            buttons.forEach(btn => btn.disabled = true);
-            
-            // 상태 표시등 업데이트
-            const statusLed = document.getElementById('statusLed');
-            statusLed.className = 'status-indicator';
+            const cuteStatus = document.getElementById('cuteStatus');
+            cuteStatus.textContent = message;
+            cuteStatus.style.color = '#FF3B30';
+            document.getElementById('openButton').disabled = true;
+            document.getElementById('closeButton').disabled = true;
         }
 
         // 연결 상태 확인
         async function checkConnection() {
             if (!await validateToken()) return;
 
-            const statusLed = document.getElementById('statusLed');
-            const statusMessage = document.getElementById('statusMessage');
-            const buttons = document.querySelectorAll('.btn-control');
+            const cuteStatus = document.getElementById('cuteStatus');
             
             try {
                 const response = await fetch('/api/device/command/ESP32_001', {
@@ -302,17 +230,17 @@
                 
                 if (data.command === 'open' || data.command === 'close' || data.command === null) {
                     isConnected = true;
-                    statusLed.className = 'status-indicator status-connected';
-                    statusMessage.textContent = '게이트와 연결되었습니다';
-                    buttons.forEach(btn => btn.disabled = false);
-                    } else {
+                    cuteStatus.innerHTML = '<span style="color:#34C759;">🟢 연결됨</span>';
+                    document.getElementById('openButton').disabled = false;
+                    document.getElementById('closeButton').disabled = false;
+                } else {
                     throw new Error('연결 실패');
-                    }
+                }
             } catch (error) {
                 isConnected = false;
-                statusLed.className = 'status-indicator';
-                statusMessage.textContent = '게이트와 연결할 수 없습니다';
-                buttons.forEach(btn => btn.disabled = true);
+                cuteStatus.innerHTML = '<span style="color:#FF3B30;">🔴 서버 연결 실패</span>';
+                document.getElementById('openButton').disabled = true;
+                document.getElementById('closeButton').disabled = true;
                 setTimeout(checkConnection, 5000);
             }
         }
@@ -322,21 +250,17 @@
             try {
                 const response = await fetch('/api/device/status/ESP32_001');
                 const data = await response.json();
-                const barrierDiv = document.getElementById('barrierState');
+                const cuteStatus = document.getElementById('cuteStatus');
                 if (data.status === 'opened') {
-                    barrierDiv.textContent = '현재 상태: 열림';
-                    barrierDiv.style.color = '#007AFF';
+                    cuteStatus.innerHTML = '<span style="color:#4f8cff;">🚦 현재 상태: <b>열림</b></span>';
                 } else if (data.status === 'closed') {
-                    barrierDiv.textContent = '현재 상태: 닫힘';
-                    barrierDiv.style.color = '#FF3B30';
+                    cuteStatus.innerHTML = '<span style="color:#ff7eb9;">🚦 현재 상태: <b>닫힘</b></span>';
                 } else {
-                    barrierDiv.textContent = '현재 상태: 알 수 없음';
-                    barrierDiv.style.color = '#8E8E93';
+                    cuteStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
                 }
             } catch (e) {
-                const barrierDiv = document.getElementById('barrierState');
-                barrierDiv.textContent = '현재 상태: 알 수 없음';
-                barrierDiv.style.color = '#8E8E93';
+                const cuteStatus = document.getElementById('cuteStatus');
+                cuteStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
             }
         }
 
@@ -347,15 +271,15 @@
                 return;
             }
 
-            const statusMessage = document.getElementById('statusMessage');
-            const buttons = document.querySelectorAll('.btn-control');
+            const cuteStatus = document.getElementById('cuteStatus');
             const activeButton = command === 'open' ? 'openButton' : 'closeButton';
             
             try {
-                buttons.forEach(btn => btn.disabled = true);
-                statusMessage.textContent = '명령 전송 중...';
+                document.getElementById('openButton').disabled = true;
+                document.getElementById('closeButton').disabled = true;
+                cuteStatus.innerHTML = '명령 전송 중...';
 
-                document.getElementById(activeButton).classList.add(`animate-${command}`);
+                document.getElementById(activeButton).style.transform = 'scale(0.96)';
 
                 const response = await fetch('/api/device/command/ESP32_001', {
                     method: 'POST',
@@ -368,7 +292,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    statusMessage.textContent = '명령이 전송되었습니다';
+                    cuteStatus.innerHTML = '<span style="color:#34C759;">명령이 전송되었습니다!</span>';
                     if ('vibrate' in navigator) {
                         navigator.vibrate(50);
                     }
@@ -381,10 +305,10 @@
                     throw new Error(data.error || '명령 전송 실패');
                 }
             } catch (error) {
-                statusMessage.textContent = error.message;
+                cuteStatus.innerHTML = '<span style="color:#FF3B30;">' + error.message + '</span>';
             } finally {
                 setTimeout(() => {
-                    document.getElementById(activeButton).classList.remove(`animate-${command}`);
+                    document.getElementById(activeButton).style.transform = 'scale(1)';
                 }, 400);
 
                 setTimeout(() => {
