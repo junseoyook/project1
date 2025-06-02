@@ -57,6 +57,11 @@ router.get('/command/:deviceId', (req, res) => {
   res.json({ command: null });
 });
 
+// 토큰 유효성 검증 (임시: 항상 성공)
+router.post('/tokens/validate', (req, res) => {
+  res.json({ success: true, valid: true });
+});
+
 /*
 // 예약 생성
 router.post('/reservations', async (req, res) => {
