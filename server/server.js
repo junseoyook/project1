@@ -235,6 +235,19 @@ app.get('/customer/:uniqueId/:token', validateToken, (req, res) => {
 // 정적 파일 서빙은 마지막에 위치
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+app.use((req, res, next) => {
+  console.log('요청:', req.method, req.url);
+  next();
+});
+
+app.all('/api/test', (req, res) => {
+  res.json({ success: true, message: 'API 라우터 정상 동작!' });
+});
+
+app.post('/api/control/:deviceId', (req, res) => {
+  res.json({ debug: true, deviceId: req.params.deviceId, body: req.body });
+});
+
 // 서버 시작
 const startServer = async () => {
     try {
