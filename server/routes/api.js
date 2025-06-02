@@ -52,6 +52,11 @@ router.post('/close', authenticateDevice, (req, res) => {
   });
 });
 
+// 차단기 명령 상태 조회 (연결 확인용)
+router.get('/command/:deviceId', (req, res) => {
+  res.json({ command: null });
+});
+
 /*
 // 예약 생성
 router.post('/reservations', async (req, res) => {
