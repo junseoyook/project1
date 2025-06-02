@@ -1,0 +1,138 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
+
+// 📡 WiFi 설정
+const char* ssid = "TP-LINK_43B2";
+const char* password = "41151501";
+
+// 🌐 서버 설정
+const char* serverUrl = "https://project1-production-f338.up.railway.app";
+const char* deviceId = "ESP32_001";
+const char* deviceSecret = "esp32-secret-key";
+
+// 📍 핀 설정
+const int closePin = 25;   // K1 제어 핀
+const int openPin  = 26;   // K2 제어 핀
+
+// 주기
+unsigned long lastCheck = 0;
+const unsigned long interval = 1000;  // 1초마다 서버 확인
+
+WiFiClientSecure client;
+String lastCommand = "";  // 마지막 명령 저장
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(closePin, OUTPUT);
+  pinMode(openPin, OUTPUT);
+  digitalWrite(closePin, LOW);
+  digitalWrite(openPin, LOW);
+
+  client.setInsecure();  // SSL 인증서 무시
+
+  WiFi.begin(ssid, password);
+  Serial.print("WiFi 연결 중");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi 연결됨");
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi 재연결 시도");
+    WiFi.reconnect();
+    return;
+  }
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastCheck >= interval) {
+    lastCheck = currentMillis;
+    checkServer();
+  }
+}
+
+void checkServer() {
+  HTTPClient https;
+  String url = String(serverUrl) + "/api/device/command/" + deviceId;
+
+  if (https.begin(client, url)) {
+    https.addHeader("Authorization", deviceSecret);
+    https.addHeader("Content-Type", "application/json");
+
+    int httpCode = https.GET();
+    String payload = https.getString();
+
+    if (httpCode == 200) {
+      StaticJsonDocument<200> doc;
+      DeserializationError error = deserializeJson(doc, payload);
+      if (error) {
+        Serial.println("JSON 파싱 오류");
+        https.end();
+        return;
+      }
+
+      const char* command = doc["command"];
+      if (!command) {
+        https.end();
+        return;
+      }
+
+      // 🔁 중복 명령 무시
+      if (lastCommand == String(command)) {
+        https.end();
+        return;
+      }
+
+      lastCommand = String(command);  // 새로운 명령 저장
+
+      if (strcmp(command, "close") == 0) {
+        Serial.println("닫힘 명령 실행");
+        controlBarrier(closePin);
+        notifyStatus("closed");
+      } 
+      else if (strcmp(command, "open") == 0) {
+        Serial.println("열림 명령 실행");
+        controlBarrier(openPin);
+        notifyStatus("opened");
+      }
+    }
+  }
+  https.end();
+}
+
+void notifyStatus(const char* status) {
+  HTTPClient https;
+  String url = String(serverUrl) + "/api/device/status/" + deviceId;
+
+  if (https.begin(client, url)) {
+    https.addHeader("Authorization", deviceSecret);
+    https.addHeader("Content-Type", "application/json");
+
+    StaticJsonDocument<200> doc;
+    doc["status"] = status;
+    doc["timestamp"] = millis();
+
+    String jsonString;
+    serializeJson(doc, jsonString);
+    int httpCode = https.POST(jsonString);
+
+    if (httpCode == 200) {
+      Serial.println("상태 전송 완료");
+    }
+  }
+  https.end();
+}
+
+void controlBarrier(int pin) {
+  digitalWrite(pin, HIGH);
+  delay(500);  // 0.5초 유지
+  digitalWrite(pin, LOW);
+  Serial.print("핀 ");
+  Serial.print(pin);
+  Serial.println(" 작동 완료 (HIGH → 0.5s → LOW)");
+}
