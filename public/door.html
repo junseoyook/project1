@@ -2,356 +2,73 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>현관문 리모컨</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --ios-blue: #007AFF;
-            --ios-red: #FF3B30;
-            --ios-gray: #8E8E93;
-            --ios-light-gray: #F2F2F7;
-            --ios-border: rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        body {
-            background: #000;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .status-bar {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 16px;
-            padding-top: max(12px, env(safe-area-inset-top));
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid var(--ios-border);
-        }
-
-        .status-bar h1 {
-            font-size: 17px;
-            font-weight: 600;
-            color: #000;
-        }
-
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
-            background: var(--ios-gray);
-            transition: background-color 0.3s ease;
-        }
-
-        .status-connected {
-            background: #34C759;
-        }
-
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
-            background: #000;
-        }
-
-        .status-message {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 16px;
-            text-align: center;
-            font-size: 15px;
-            font-weight: 500;
-            margin-bottom: 32px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .remote-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .btn-control {
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            height: 140px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-control::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            border-radius: 24px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .btn-control:active:not(:disabled)::before {
-            opacity: 1;
-        }
-
-        .btn-control:disabled {
-            opacity: 0.5;
-        }
-
-        .btn-control i {
-            font-size: 48px;
-            color: #fff;
-        }
-
-        .btn-control .label {
-            color: #fff;
-            font-size: 17px;
-            font-weight: 500;
-        }
-
-        .btn-open i {
-            color: var(--ios-blue);
-        }
-
-        .btn-close i {
-            color: var(--ios-red);
-        }
-
-        .notice {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 16px;
-            margin-top: auto;
-        }
-
-        .notice p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
-            line-height: 1.4;
-            text-align: center;
-        }
-
-        @keyframes unlock {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-5px) scale(1.1); }
-            100% { transform: translateY(0) scale(1); }
-        }
-
-        @keyframes lock {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(5px) scale(1.1); }
-            100% { transform: translateY(0) scale(1); }
-        }
-
-        .animate-unlock i {
-            animation: unlock 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .animate-lock i {
-            animation: lock 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @media (display-mode: standalone) {
-            .status-bar {
-                padding-top: env(safe-area-inset-top);
-            }
-            
-            .container {
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문 제어</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="status-bar">
-        <span id="statusLed" class="status-indicator"></span>
-        <h1>현관문 리모컨</h1>
-    </div>
-    
     <div class="container">
-        <div id="statusMessage" class="status-message">
-            연결 상태 확인 중...
-            </div>
-
-        <div class="remote-buttons">
-            <button id="openButton" class="btn-control btn-open" onclick="sendCommand('open')" disabled>
-                <i class="fas fa-unlock"></i>
-                <span class="label">열기</span>
-            </button>
-            <button id="closeButton" class="btn-control btn-close" onclick="sendCommand('close')" disabled>
-                <i class="fas fa-lock"></i>
-                <span class="label">닫기</span>
-                </button>
-            </div>
-
-        <div class="notice">
-            <p>
-                이 링크는 24시간 동안 유효하며, 최대 10회까지 사용할 수 있습니다.<br>
-                출입 후에는 반드시 닫기 버튼을 눌러주세요.
-            </p>
+        <h1>문 제어</h1>
+        <div class="door-controls">
+            <button onclick="openDoor()">문 열기</button>
+            <button onclick="closeDoor()">문 닫기</button>
+        </div>
+        <div class="status-display">
+            <h2>현재 상태</h2>
+            <p>문 상태: <span id="doorStatus">확인 중...</span></p>
         </div>
     </div>
-
     <script>
-        let isConnected = false;
-        let token = null;
-        
-        // URL에서 토큰 추출
-        function getTokenFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('token');
-        }
-
-        // 토큰 검증
-        async function validateToken() {
-            token = getTokenFromUrl();
-            if (!token) {
-                alert('유효하지 않은 접근입니다.');
-                window.location.href = '/';
-                return false;
-            }
-
-            try {
-                const response = await fetch(`/api/tokens/${token}`);
-                if (!response.ok) {
-                    throw new Error('토큰이 유효하지 않습니다.');
-                }
-                return true;
-            } catch (error) {
-                alert(error.message);
-                window.location.href = '/';
-                return false;
-            }
-        }
-
-        // 연결 상태 확인
-        async function checkConnection() {
-            if (!await validateToken()) return;
-
-            const statusLed = document.getElementById('statusLed');
-            const statusMessage = document.getElementById('statusMessage');
-            const buttons = document.querySelectorAll('.btn-control');
-            
-            try {
-                const response = await fetch('/api/control/ESP32_002', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    },
-                    body: JSON.stringify({ command: 'status' })
+        function openDoor() {
+            fetch('/api/door/open', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('문이 열렸습니다.');
+                        updateDoorStatus();
+                    } else {
+                        alert('문 열기 실패: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('문 열기 중 오류가 발생했습니다.');
                 });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    isConnected = true;
-                    statusLed.className = 'status-indicator status-connected';
-                    statusMessage.textContent = '현관문과 연결되었습니다';
-                    buttons.forEach(btn => btn.disabled = false);
-                } else {
-                    throw new Error('연결 실패');
-                }
-            } catch (error) {
-                isConnected = false;
-                statusLed.className = 'status-indicator';
-                statusMessage.textContent = '현관문과 연결할 수 없습니다';
-                buttons.forEach(btn => btn.disabled = true);
-                setTimeout(checkConnection, 5000);
-            }
         }
 
-        // 명령 전송
-        async function sendCommand(command) {
-            if (!isConnected) {
-                alert('게이트와 연결되어 있지 않습니다.');
-                return;
-            }
-            const statusMessage = document.getElementById('statusMessage');
-            const activeButton = command === 'open' ? 'openButton' : 'closeButton';
-            statusMessage.innerHTML = '<span style="color:#007AFF;">현관문 동작 중입니다...<br>잠시만 기다려주세요!</span>';
-            document.getElementById('openButton').disabled = true;
-            document.getElementById('closeButton').disabled = true;
-            try {
-                document.getElementById(activeButton).style.transform = 'scale(0.97)';
-                const response = await fetch('/api/control/ESP32_001', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command, key: 'your-control-key' })
+        function closeDoor() {
+            fetch('/api/door/close', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('문이 닫혔습니다.');
+                        updateDoorStatus();
+                    } else {
+                        alert('문 닫기 실패: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('문 닫기 중 오류가 발생했습니다.');
                 });
-                let data;
-                try {
-                    data = await response.json();
-                } catch (jsonError) {
-                    throw new Error('서버 오류: 올바르지 않은 응답(HTML 등)이 반환됨');
-                }
-                if (data.success) {
-                    if ('vibrate' in navigator) navigator.vibrate(50);
-                } else {
-                    throw new Error(data.error || '명령 전송 실패');
-                }
-            } catch (error) {
-                statusMessage.innerHTML = '<span style="color:#FF3B30;">' + error.message + '</span>';
-                return;
-            } finally {
-                setTimeout(() => {
-                    document.getElementById(activeButton).style.transform = 'scale(1)';
-                }, 400);
-            }
-            setTimeout(async () => {
-                // 상태 갱신 함수 호출 등 추가 동작 필요시 여기에 작성
-                document.getElementById('openButton').disabled = false;
-                document.getElementById('closeButton').disabled = false;
-            }, 3000);
         }
 
-        // 페이지 로드 시 토큰 검증 및 연결 상태 확인
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (await validateToken()) {
-                checkConnection();
-            }
-        });
-
-        // iOS에서 더블탭 확대 방지
-        document.addEventListener('touchend', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-
-        // PWA 상태바 처리
-        if (window.navigator.standalone) {
-            document.documentElement.style.setProperty('--safe-area-inset-top', '44px');
+        function updateDoorStatus() {
+            fetch('/api/door/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('doorStatus').textContent = data.status;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('doorStatus').textContent = '상태 확인 실패';
+                });
         }
+
+        // 페이지 로드 시 상태 업데이트
+        updateDoorStatus();
+        // 주기적으로 상태 업데이트
+        setInterval(updateDoorStatus, 5000);
     </script>
 </body>
 </html> 
