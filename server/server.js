@@ -150,26 +150,6 @@ app.post('/api/device/status/:deviceId', authenticateDevice, (req, res) => {
   res.json({ success: true });
 });
 
-// 리모컨 제어 엔드포인트
-const CONTROL_KEY = 'your-control-key';
-app.post('/api/control/:deviceId', (req, res) => {
-  const { deviceId } = req.params;
-  const { command, key } = req.body;
-  const device = devices.get(deviceId);
-  if (!device) {
-    return res.status(404).json({ error: '디바이스를 찾을 수 없음' });
-  }
-  if (key !== CONTROL_KEY) {
-    return res.status(401).json({ error: '잘못된 제어 키' });
-  }
-  if (command !== 'open' && command !== 'close') {
-    return res.status(400).json({ error: '잘못된 명령' });
-  }
-  device.command = command;
-  device.lastUpdate = Date.now();
-  res.json({ success: true, message: `${command === 'open' ? '열기' : '닫기'} 명령이 전송되었습니다` });
-});
-
 // 관리자 페이지
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
@@ -240,12 +220,29 @@ app.use((req, res, next) => {
   next();
 });
 
+// 테스트 라우터는 유지
 app.all('/api/test', (req, res) => {
   res.json({ success: true, message: 'API 라우터 정상 동작!' });
 });
 
+// 실제 명령 처리 라우터만 남김
+const CONTROL_KEY = 'your-control-key';
 app.post('/api/control/:deviceId', (req, res) => {
-  res.json({ debug: true, deviceId: req.params.deviceId, body: req.body });
+  const { deviceId } = req.params;
+  const { command, key } = req.body;
+  const device = devices.get(deviceId);
+  if (!device) {
+    return res.status(404).json({ error: '디바이스를 찾을 수 없음' });
+  }
+  if (key !== CONTROL_KEY) {
+    return res.status(401).json({ error: '잘못된 제어 키' });
+  }
+  if (command !== 'open' && command !== 'close') {
+    return res.status(400).json({ error: '잘못된 명령' });
+  }
+  device.command = command;
+  device.lastUpdate = Date.now();
+  res.json({ success: true, message: `${command === 'open' ? '열기' : '닫기'} 명령이 전송되었습니다` });
 });
 
 // 서버 시작
