@@ -31,54 +31,81 @@
             font-size: 20px;
             font-weight: 700;
             color: #22223b;
-            margin-bottom: 18px;
+            margin-bottom: 10px;
             letter-spacing: 1px;
         }
-        .remote-icon {
-            font-size: 48px;
+        .remote-led {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #b2f7c1;
+            box-shadow: 0 0 8px #b2f7c1;
             margin-bottom: 18px;
-            color: #007AFF;
-            filter: drop-shadow(0 2px 6px #b3d1ff);
+            border: 2.5px solid #e5e5ea;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .remote-led.open {
+            background: #34c759;
+            box-shadow: 0 0 12px #34c759, 0 0 2px #34c759;
+        }
+        .remote-led.close {
+            background: #ff3b30;
+            box-shadow: 0 0 12px #ff3b30, 0 0 2px #ff3b30;
         }
         .remote-btns {
             display: flex;
             flex-direction: column;
-            gap: 24px;
-            margin-bottom: 18px;
+            gap: 22px;
+            margin: 18px 0 18px 0;
             width: 100%;
             align-items: center;
         }
-        .remote-btn {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+        .remote-switch {
+            width: 140px;
+            height: 48px;
+            border-radius: 24px;
             border: none;
-            font-size: 32px;
-            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.25s, color 0.25s;
+            outline: none;
+            position: relative;
+            padding: 0 0 0 8px;
+            text-transform: uppercase;
+        }
+        .remote-switch.open {
+            background: linear-gradient(90deg, #b2f7c1 0%, #34c759 100%);
+            color: #fff;
+        }
+        .remote-switch.close {
+            background: linear-gradient(90deg, #ffb6b6 0%, #ff3b30 100%);
+            color: #fff;
+            justify-content: flex-end;
+            padding: 0 8px 0 0;
+        }
+        .switch-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.15s;
-            outline: none;
-            position: relative;
+            font-size: 18px;
+            margin-right: 10px;
+            margin-left: 0;
+            transition: margin 0.25s;
         }
-        .remote-btn.open {
-            background: linear-gradient(145deg, #7ed6ff 0%, #007AFF 100%);
-            color: #fff;
-        }
-        .remote-btn.close {
-            background: linear-gradient(145deg, #ffb6b6 0%, #FF3B30 100%);
-            color: #fff;
-        }
-        .remote-btn:active {
-            transform: scale(0.96);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.10);
-        }
-        .remote-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .remote-switch.close .switch-dot {
+            margin-left: 10px;
+            margin-right: 0;
         }
         .remote-status {
             font-size: 15px;
@@ -100,48 +127,21 @@
             margin-top: 8px;
             text-align: center;
         }
-        .gauge-container {
-            display: none;
-            justify-content: center;
-            align-items: center;
-            margin: 18px 0 0 0;
-        }
-        .gauge {
-            width: 48px;
-            height: 48px;
-        }
-        .gauge-bg {
-            fill: none;
-            stroke: #eee;
-            stroke-width: 4;
-        }
-        .gauge-bar {
-            fill: none;
-            stroke: #007AFF;
-            stroke-width: 4;
-            stroke-dasharray: 125.6;
-            stroke-dashoffset: 125.6;
-        }
     </style>
 </head>
 <body>
     <div class="remote-body">
         <div class="remote-title">주차장 리모컨</div>
-        <div class="remote-icon"><i class="fa-solid fa-car-side"></i></div>
+        <div class="remote-led" id="remoteLed"></div>
         <div class="remote-btns">
-            <button id="openButton" class="remote-btn open" onclick="sendCommand('open')" disabled>
-                <i class="fa-solid fa-arrow-up"></i>
+            <button id="openButton" class="remote-switch open" onclick="sendCommand('open')" disabled>
+                <span class="switch-dot"><i class="fa-solid fa-bolt"></i></span>
+                OPEN
             </button>
-            <button id="closeButton" class="remote-btn close" onclick="sendCommand('close')" disabled>
-                <i class="fa-solid fa-arrow-down"></i>
+            <button id="closeButton" class="remote-switch close" onclick="sendCommand('close')" disabled>
+                CLOSE
+                <span class="switch-dot"><i class="fa-solid fa-bolt"></i></span>
             </button>
-        </div>
-        <div class="gauge-container" id="gaugeContainer" style="display:none;">
-          <svg class="gauge" width="48" height="48">
-            <circle class="gauge-bg" cx="24" cy="24" r="20" stroke="#eee" stroke-width="4" fill="none"/>
-            <circle class="gauge-bar" cx="24" cy="24" r="20" stroke="#007AFF" stroke-width="4" fill="none"
-              stroke-dasharray="125.6" stroke-dashoffset="125.6"/>
-          </svg>
         </div>
         <div id="iosStatus" class="remote-status">상태 확인 중...</div>
         <div class="remote-notice">입차 후 반드시 닫기 버튼을 눌러주세요</div>
@@ -226,13 +226,19 @@
                 iosStatus.innerHTML = '<span style="color:#8E8E93;">🚦 현재 상태: 알 수 없음</span>';
             }
         }
-        async function sendCommandWithRetry(command, retries = 3) {
-            const gauge = document.querySelector('.gauge-bar');
-            const gaugeContainer = document.getElementById('gaugeContainer');
-            gaugeContainer.style.display = 'flex';
+        async function sendCommand(command) {
+            if (!isConnected) {
+                alert('게이트와 연결되어 있지 않습니다.');
+                return;
+            }
+            document.getElementById('openButton').disabled = true;
+            document.getElementById('closeButton').disabled = true;
+            const led = document.getElementById('remoteLed');
+            led.classList.remove('open', 'close');
+            if (command === 'open') led.classList.add('open');
+            if (command === 'close') led.classList.add('close');
             let success = false;
-            for (let i = 0; i < retries; i++) {
-                gauge.style.strokeDashoffset = 125.6 - (125.6 * (i + 1) / retries);
+            for (let i = 0; i < 3; i++) {
                 try {
                     const response = await fetch('/api/control/ESP32_001', {
                         method: 'POST',
@@ -247,7 +253,9 @@
                 } catch (e) {}
                 await new Promise(res => setTimeout(res, 400));
             }
-            gaugeContainer.style.display = 'none';
+            setTimeout(() => {
+                led.classList.remove('open', 'close');
+            }, 3000);
             const iosStatus = document.getElementById('iosStatus');
             if (success) {
                 iosStatus.innerHTML = '<span style="color:#34C759;">차단기 동작 신호 전송 성공!</span>';
@@ -256,15 +264,6 @@
             }
             document.getElementById('openButton').disabled = false;
             document.getElementById('closeButton').disabled = false;
-        }
-        async function sendCommand(command) {
-            if (!isConnected) {
-                alert('게이트와 연결되어 있지 않습니다.');
-                return;
-            }
-            document.getElementById('openButton').disabled = true;
-            document.getElementById('closeButton').disabled = true;
-            await sendCommandWithRetry(command, 3);
         }
         document.addEventListener('DOMContentLoaded', async () => {
             if (await validateToken()) {
