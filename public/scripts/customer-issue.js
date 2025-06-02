@@ -19,14 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
         issueBtn.disabled = true;
         issueMsg.textContent = '발급 중...';
         try {
-            const response = await fetch('/api/generate-tokens', {
+            const response = await fetch('/api/customer/issue', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    phoneNumber
-                })
+                body: JSON.stringify({ phone: phoneNumber })
             });
 
             const data = await response.json();
