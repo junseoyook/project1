@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const deviceController = require('../controllers/deviceController');
-const Reservation = require('../models/Reservation');
-const EntryLog = require('../models/EntryLog');
+// const Reservation = require('../models/Reservation');
+// const EntryLog = require('../models/EntryLog');
 
 // 디바이스 인증 미들웨어
 const authenticateDevice = (req, res, next) => {
@@ -52,6 +52,7 @@ router.post('/close', authenticateDevice, (req, res) => {
   });
 });
 
+/*
 // 예약 생성
 router.post('/reservations', async (req, res) => {
   try {
@@ -151,5 +152,6 @@ router.post('/exit-logs', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+*/
 
 module.exports = router; 
