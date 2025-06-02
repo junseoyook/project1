@@ -21,7 +21,7 @@ mongoose.connect(process.env.MONGO_URL, {
 .catch(err => console.error('MongoDB 연결 실패:', err));
 
 // 라우트 설정
-app.use('/api/door', require('./server/routes/door'));
+// app.use('/api/door', require('./server/routes/door'));
 app.use('/api/parking', require('./server/routes/parking'));
 app.use('/api/customer', require('./server/routes/customer'));
 
