@@ -28,6 +28,10 @@ app.use('/api/parking', require('./server/routes/parking'));
 app.use('/api/customer', require('./server/routes/customer'));
 app.use('/api/device', require('./server/routes/api'));
 
+app.post('/api/tokens/validate', (req, res) => {
+  res.json({ success: true, valid: true });
+});
+
 // 서버 시작
 app.listen(port, () => {
     console.log(`서버가 포트 ${port}에서 실행 중입니다.`);
