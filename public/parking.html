@@ -252,7 +252,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ command, key: 'your-control-key' })
                 });
-                const data = await response.json();
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error('서버 오류: 올바르지 않은 응답(HTML 등)이 반환됨');
+                }
                 if (data.success) {
                     if ('vibrate' in navigator) navigator.vibrate(50);
                 } else {
