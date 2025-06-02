@@ -247,10 +247,10 @@
             document.getElementById('closeButton').disabled = true;
             try {
                 document.getElementById(activeButton).style.transform = 'scale(0.97)';
-                const response = await fetch('/api/device/command/ESP32_001', {
+                const response = await fetch('/api/control/ESP32_001', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command })
+                    body: JSON.stringify({ command, key: 'your-control-key' })
                 });
                 const data = await response.json();
                 if (data.success) {
