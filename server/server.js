@@ -98,7 +98,6 @@ async function sendSMS(phoneNumber, message) {
 // 미들웨어 설정
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // 디바이스 데이터 (메모리에 임시 저장)
 const devices = new Map();
@@ -232,6 +231,9 @@ const validateToken = (req, res, next) => {
 app.get('/customer/:uniqueId/:token', validateToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'customer.html'));
 });
+
+// 정적 파일 서빙은 마지막에 위치
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // 서버 시작
 const startServer = async () => {
