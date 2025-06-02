@@ -1,3 +1,5 @@
+console.log('🔥 server.js가 실행되고 있습니다!');
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
