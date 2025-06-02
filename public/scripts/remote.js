@@ -19,13 +19,12 @@ async function sendCommand(command, buttonElement) {
 
     try {
         ledIndicator.classList.add('active');
-        const response = await fetch(`/api/device/command/${DEVICE_ID}`, {
+        const response = await fetch(`/api/control/${DEVICE_ID}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ command })
+            body: JSON.stringify({ command, key: CONTROL_KEY })
         });
 
         const data = await response.json();
