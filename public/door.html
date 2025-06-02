@@ -295,48 +295,45 @@
         // 명령 전송
         async function sendCommand(command) {
             if (!isConnected) {
-                alert('현관문과 연결되어 있지 않습니다.');
+                alert('게이트와 연결되어 있지 않습니다.');
                 return;
             }
-
             const statusMessage = document.getElementById('statusMessage');
-            const buttons = document.querySelectorAll('.btn-control');
             const activeButton = command === 'open' ? 'openButton' : 'closeButton';
-            
+            statusMessage.innerHTML = '<span style="color:#007AFF;">현관문 동작 중입니다...<br>잠시만 기다려주세요!</span>';
+            document.getElementById('openButton').disabled = true;
+            document.getElementById('closeButton').disabled = true;
             try {
-                buttons.forEach(btn => btn.disabled = true);
-                statusMessage.textContent = '명령 전송 중...';
-
-                document.getElementById(activeButton).classList.add(`animate-${command}`);
-
-                const response = await fetch('/api/control/ESP32_002', {
+                document.getElementById(activeButton).style.transform = 'scale(0.97)';
+                const response = await fetch('/api/control/ESP32_001', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    },
-                    body: JSON.stringify({ command })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command, key: 'your-control-key' })
                 });
-                
-                const data = await response.json();
-                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    throw new Error('서버 오류: 올바르지 않은 응답(HTML 등)이 반환됨');
+                }
                 if (data.success) {
-                    statusMessage.textContent = data.message;
-                    navigator.vibrate(50);
+                    if ('vibrate' in navigator) navigator.vibrate(50);
                 } else {
                     throw new Error(data.error || '명령 전송 실패');
                 }
             } catch (error) {
-                statusMessage.textContent = error.message;
+                statusMessage.innerHTML = '<span style="color:#FF3B30;">' + error.message + '</span>';
+                return;
             } finally {
                 setTimeout(() => {
-                    document.getElementById(activeButton).classList.remove(`animate-${command}`);
+                    document.getElementById(activeButton).style.transform = 'scale(1)';
                 }, 400);
-
-                setTimeout(() => {
-                    checkConnection();
-                }, 3000);
             }
+            setTimeout(async () => {
+                // 상태 갱신 함수 호출 등 추가 동작 필요시 여기에 작성
+                document.getElementById('openButton').disabled = false;
+                document.getElementById('closeButton').disabled = false;
+            }, 3000);
         }
 
         // 페이지 로드 시 토큰 검증 및 연결 상태 확인
