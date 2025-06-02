@@ -26,6 +26,7 @@ mongoose.connect(process.env.MONGO_URL, {
 // app.use('/api/door', require('./server/routes/door'));
 app.use('/api/parking', require('./server/routes/parking'));
 app.use('/api/customer', require('./server/routes/customer'));
+app.use('/api/device', require('./server/routes/api'));
 
 // 서버 시작
 app.listen(port, () => {
