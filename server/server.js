@@ -107,6 +107,11 @@ devices.set('ESP32_001', {
   command: '',  // 'open' 또는 'close'
   lastUpdate: Date.now()
 });
+devices.set('ESP32_002', {
+  secret: 'esp32-secret-key',
+  command: '',
+  lastUpdate: Date.now()
+});
 
 // 디바이스 인증 미들웨어
 const authenticateDevice = (req, res, next) => {
