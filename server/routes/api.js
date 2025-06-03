@@ -54,7 +54,18 @@ router.post('/close', authenticateDevice, (req, res) => {
 
 // 차단기 명령 상태 조회 (연결 확인용)
 router.get('/command/:deviceId', (req, res) => {
-  res.json({ command: null });
+  const device = deviceController.getDevice(req.params.deviceId);
+  if (!device) return res.json({ command: null });
+
+  let command = null;
+  if (device.shouldOpen) {
+    command = "open";
+    device.shouldOpen = false;
+  } else if (device.shouldClose) {
+    command = "close";
+    device.shouldClose = false;
+  }
+  res.json({ command });
 });
 
 // 토큰 유효성 검증 (임시: 항상 성공)

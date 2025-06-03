@@ -70,12 +70,15 @@ void checkServer() {
     https.addHeader("Content-Type", "application/json");
 
     int httpCode = https.GET();
-    String payload = https.getString();
+    if (httpCode > 0) {
+      String payload = https.getString();
 
-    if (httpCode == 200) {
-      StaticJsonDocument<200> doc;
+      // ★ 서버 응답 전체를 시리얼로 출력
+      Serial.println("서버 응답: ");
+      Serial.println(payload);
+
+      DynamicJsonDocument doc(256);
       DeserializationError error = deserializeJson(doc, payload);
-
       if (error) {
         Serial.println("JSON 파싱 오류");
         https.end();
@@ -84,20 +87,31 @@ void checkServer() {
 
       const char* command = doc["command"];
       if (!command) {
+        Serial.println("명령 없음");
         https.end();
         return;
       }
 
-      // 이전 명령과 다를 때만 실행
-      if (strcmp(command, lastCommand.c_str()) != 0) {
-        lastCommand = String(command);  // 현재 명령을 저장
-        
-        if (strcmp(command, "close") == 0) {
-          Serial.println("새로운 닫힘 명령 실행");
-          controlBarrier();
-          notifyStatus("closed");
-        }
+      if (lastCommand == String(command)) {
+        Serial.println("중복 명령: " + String(command));
+        https.end();
+        return;
       }
+
+      Serial.println("명령 수신: " + String(command));
+      lastCommand = String(command);
+
+      // 실제 명령 실행 코드(기존 코드 유지)
+      if (String(command) == "open") {
+        Serial.println("차단기 열기 동작!");
+        // ... 기존 open 동작 ...
+      } else if (String(command) == "close") {
+        Serial.println("차단기 닫기 동작!");
+        controlBarrier();
+        notifyStatus("closed");
+      }
+    } else {
+      Serial.println("서버 GET 요청 실패");
     }
   }
   https.end();
