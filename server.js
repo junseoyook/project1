@@ -38,5 +38,5 @@ app.post('/api/control/:deviceId', (req, res) => {
 
 // 서버 시작
 app.listen(port, () => {
-    console.log(`서버가 포트 ${port}에서 실행 중입니다.`);
+    // console.log(`서버가 포트 ${port}에서 실행 중입니다.`); // 불필요한 로그 제거
 }); 
