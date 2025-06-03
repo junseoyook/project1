@@ -66,7 +66,8 @@ void checkServer() {
   String url = String(serverUrl) + "/api/device/command/" + deviceId;
 
   if (https.begin(client, url)) {
-    https.addHeader("Authorization", deviceSecret);
+    https.addHeader("x-device-id", deviceId);
+    https.addHeader("x-device-secret", deviceSecret);
     https.addHeader("Content-Type", "application/json");
 
     int httpCode = https.GET();
