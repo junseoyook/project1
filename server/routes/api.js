@@ -68,3 +68,4 @@ router.get('/command/:deviceId', (req, res) => {
 });
 
 // 토큰
+module.exports = router;
