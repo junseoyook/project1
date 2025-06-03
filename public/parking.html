@@ -6,155 +6,159 @@
     <title>주차장 리모컨</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            background: #f5f6fa;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+        }
+        .remote-eink {
+            width: 100vw;
+            max-width: 420px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            padding: 0 12px;
         }
-        .remote-body {
+        .remote-card {
             background: #fff;
-            border-radius: 40px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 1.5px 8px rgba(0,0,0,0.04);
+            border: 1.5px solid #ddd;
+            border-radius: 18px;
+            box-shadow: 0 2px 12px #0001;
             padding: 36px 24px 28px 24px;
-            max-width: 320px;
+            max-width: 340px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            border: 2.5px solid #e5e5ea;
-            position: relative;
         }
-        .remote-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #22223b;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-        }
-        .remote-led {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: #b2f7c1;
-            box-shadow: 0 0 8px #b2f7c1;
-            margin-bottom: 18px;
-            border: 2.5px solid #e5e5ea;
-            transition: background 0.3s, box-shadow 0.3s;
-        }
-        .remote-led.open {
-            background: #34c759;
-            box-shadow: 0 0 12px #34c759, 0 0 2px #34c759;
-        }
-        .remote-led.close {
-            background: #ff3b30;
-            box-shadow: 0 0 12px #ff3b30, 0 0 2px #ff3b30;
-        }
-        .toggle-switch {
-            width: 160px;
-            height: 54px;
-            border-radius: 27px;
-            background: #e5e5ea;
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin: 24px 0 18px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            cursor: pointer;
-            transition: background 0.3s;
-            user-select: none;
-        }
-        .toggle-switch.open {
-            background: linear-gradient(90deg, #b2f7c1 0%, #34c759 100%);
-        }
-        .toggle-switch.close {
-            background: linear-gradient(90deg, #ffb6b6 0%, #ff3b30 100%);
-        }
-        .toggle-label {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: #fff;
-            padding: 0 22px;
-            height: 54px;
-            transition: color 0.3s;
-        }
-        .toggle-label.open {
-            left: 0;
-            color: #fff;
-        }
-        .toggle-label.close {
-            right: 0;
-            color: #fff;
-        }
-        .toggle-knob {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
-            position: absolute;
-            top: 4px;
-            left: 4px;
+        .remote-toggle-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
-            font-weight: bold;
-            color: #34c759;
-            transition: left 0.3s, right 0.3s, color 0.3s, background 0.3s;
+            width: 100%;
+            margin: 36px 0 32px 0;
+            gap: 18px;
         }
-        .toggle-switch.close .toggle-knob {
-            left: auto;
-            right: 4px;
-            color: #ff3b30;
+        .toggle-label {
+            font-size: 1.35rem;
+            font-family: 'Consolas', 'Pretendard', monospace;
+            color: #222;
+            opacity: 0.6;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            user-select: none;
+            transition: opacity 0.2s;
+        }
+        .toggle-label.active {
+            opacity: 1;
+            color: #111;
+        }
+        .toggle-switch {
+            width: 92px;
+            height: 38px;
+            border-radius: 19px;
+            border: 2px solid #bbb;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            outline: none;
+            padding: 0;
+            margin: 0 8px;
+            transition: border 0.2s, background 0.2s;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            border: 1.5px solid #bbb;
+            box-shadow: 0 1px 4px #0001;
+            transition: left 0.25s cubic-bezier(.4,1.4,.6,1), background 0.2s, border 0.2s;
+        }
+        .toggle-switch.open .toggle-slider {
+            left: 57px;
+            background: #bfefff;
+            border: 1.5px solid #1ca7ec;
+        }
+        .toggle-switch.open {
+            border: 2px solid #1ca7ec;
+            background: #eaf8ff;
+        }
+        .toggle-label.left.active {
+            color: #ff6f61;
+            opacity: 1;
+        }
+        .toggle-label.right.active {
+            color: #1ca7ec;
+            opacity: 1;
         }
         .remote-status {
-            font-size: 15px;
-            font-weight: 500;
-            margin: 10px 0 0 0;
-            color: #007AFF;
-            text-align: center;
-            min-height: 22px;
-        }
-        .remote-notice {
-            font-size: 13px;
-            color: #666;
+            font-size: 1.1rem;
+            color: #555;
             text-align: center;
             margin-top: 18px;
+            min-height: 22px;
+            user-select: none;
         }
-        .remote-expiry {
-            color: #888;
-            font-size: 12px;
-            margin-top: 8px;
-            text-align: center;
+        @media (max-width: 600px) {
+            .remote-card {
+                padding: 24px 6px 18px 6px;
+            }
+            .remote-toggle-row {
+                margin: 24px 0 18px 0;
+            }
+            .toggle-label {
+                font-size: 1.05rem;
+            }
+            .toggle-switch {
+                width: 68px;
+                height: 28px;
+            }
+            .toggle-slider {
+                width: 20px;
+                height: 20px;
+                top: 2.5px;
+                left: 2.5px;
+            }
+            .toggle-switch.open .toggle-slider {
+                left: 41px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="remote-body">
-        <div class="remote-title">주차장 리모컨</div>
-        <div class="remote-led" id="remoteLed"></div>
-        <div class="toggle-switch open" id="toggleSwitch" onclick="toggleSwitch()">
-            <span class="toggle-label open">OPEN</span>
-            <span class="toggle-label close">CLOSE</span>
-            <span class="toggle-knob" id="toggleKnob">●</span>
+    <div class="remote-eink">
+        <div class="remote-card">
+            <div class="remote-toggle-row">
+                <span class="toggle-label left" id="labelClose">CLOSE</span>
+                <button class="toggle-switch" id="toggleSwitch" onclick="toggleRemote()">
+                    <span class="toggle-slider" id="toggleSlider"></span>
+                </button>
+                <span class="toggle-label right" id="labelOpen">OPEN</span>
+            </div>
+            <div class="remote-status" id="iosStatus">상태 확인 중...</div>
         </div>
-        <div id="iosStatus" class="remote-status">상태 확인 중...</div>
-        <div class="remote-notice">입차 후 반드시 닫기 버튼을 눌러주세요</div>
-        <div class="remote-expiry">이 링크는 숙박기간동안만 유효하고 그 이후에는 만료됩니다.</div>
     </div>
     <script>
         let isConnected = false;
         let token = null;
-        let isOpen = true; // 토글 상태: true=OPEN, false=CLOSE
+        let isOpen = false; // false=CLOSE, true=OPEN
         function getTokenFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('token');
@@ -168,9 +172,7 @@
             try {
                 const response = await fetch('/api/tokens/validate', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token })
                 });
                 const data = await response.json();
@@ -187,36 +189,30 @@
             const iosStatus = document.getElementById('iosStatus');
             iosStatus.textContent = message;
             iosStatus.style.color = '#FF3B30';
-            document.getElementById('toggleSwitch').style.pointerEvents = 'none';
+            document.getElementById('toggleSwitch').disabled = true;
         }
         async function checkConnection() {
             if (!await validateToken()) return;
             const iosStatus = document.getElementById('iosStatus');
             try {
-                const response = await fetch('/api/device/command/ESP32_001', {
-                    method: 'GET',
-                });
+                const response = await fetch('/api/device/command/ESP32_001', { method: 'GET' });
                 const data = await response.json();
                 if (data.command === 'open' || data.command === 'close' || data.command === null) {
                     isConnected = true;
                     iosStatus.innerHTML = '<span style="color:#34C759;">🟢 연결됨</span>';
-                    document.getElementById('toggleSwitch').style.pointerEvents = '';
+                    document.getElementById('toggleSwitch').disabled = false;
                 } else {
                     throw new Error('연결 실패');
                 }
             } catch (error) {
                 isConnected = false;
                 iosStatus.innerHTML = '<span style="color:#FF3B30;">🔴 서버 연결 실패</span>';
-                document.getElementById('toggleSwitch').style.pointerEvents = 'none';
+                document.getElementById('toggleSwitch').disabled = true;
                 setTimeout(checkConnection, 5000);
             }
         }
         async function sendCommand(command) {
-            document.getElementById('toggleSwitch').style.pointerEvents = 'none';
-            const led = document.getElementById('remoteLed');
-            led.classList.remove('open', 'close');
-            if (command === 'open') led.classList.add('open');
-            if (command === 'close') led.classList.add('close');
+            document.getElementById('toggleSwitch').disabled = true;
             let success = false;
             for (let i = 0; i < 3; i++) {
                 try {
@@ -239,9 +235,6 @@
                 } catch (e) {}
                 await new Promise(res => setTimeout(res, 400));
             }
-            setTimeout(() => {
-                led.classList.remove('open', 'close');
-            }, 3000);
             const iosStatus = document.getElementById('iosStatus');
             if (success) {
                 iosStatus.innerHTML = '<span style="color:#34C759;">차단기 동작 신호 전송 성공!</span>';
@@ -249,29 +242,32 @@
                 iosStatus.innerHTML = '<span style="color:#FF3B30;">명령 전송 실패, 다시 시도해 주세요.</span>';
             }
             setTimeout(() => {
-                document.getElementById('toggleSwitch').style.pointerEvents = '';
+                document.getElementById('toggleSwitch').disabled = false;
             }, 3000);
         }
-        function toggleSwitch() {
-            if (!isConnected) return;
+        function updateToggleUI() {
             const toggle = document.getElementById('toggleSwitch');
-            const knob = document.getElementById('toggleKnob');
+            const slider = document.getElementById('toggleSlider');
+            const labelClose = document.getElementById('labelClose');
+            const labelOpen = document.getElementById('labelOpen');
             if (isOpen) {
-                // CLOSE로 이동
-                toggle.classList.remove('open');
-                toggle.classList.add('close');
-                knob.textContent = '●';
-                sendCommand('close');
-            } else {
-                // OPEN으로 이동
-                toggle.classList.remove('close');
                 toggle.classList.add('open');
-                knob.textContent = '●';
-                sendCommand('open');
+                labelOpen.classList.add('active');
+                labelClose.classList.remove('active');
+            } else {
+                toggle.classList.remove('open');
+                labelOpen.classList.remove('active');
+                labelClose.classList.add('active');
             }
+        }
+        function toggleRemote() {
+            if (!isConnected) return;
             isOpen = !isOpen;
+            updateToggleUI();
+            sendCommand(isOpen ? 'open' : 'close');
         }
         document.addEventListener('DOMContentLoaded', async () => {
+            updateToggleUI();
             if (await validateToken()) {
                 checkConnection();
             }
