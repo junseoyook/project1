@@ -8,6 +8,7 @@ const deviceController = require('../controllers/deviceController');
 const authenticateDevice = (req, res, next) => {
   const deviceId = req.headers['x-device-id'];
   const deviceSecret = req.headers['x-device-secret'];
+  console.log('[인증 시도] deviceId:', deviceId, 'deviceSecret:', deviceSecret);
   
   if (!deviceId || !deviceSecret) {
     return res.status(401).json({ error: '디바이스 ID와 시크릿이 필요합니다' });
@@ -55,13 +56,14 @@ router.post('/close', authenticateDevice, (req, res) => {
 // 차단기 명령 상태 조회 (연결 확인용)
 router.get('/command/:deviceId', (req, res) => {
   const device = deviceController.getDevice(req.params.deviceId);
+  console.log('[명령 요청] deviceId:', req.params.deviceId);
   if (!device) {
-    console.log('명령 요청: 등록되지 않은 디바이스', req.params.deviceId);
+    console.log('[명령 응답] 등록되지 않은 디바이스:', req.params.deviceId);
     return res.json({ command: null });
   }
   const now = Date.now();
   if (device.lastCommand && (now - device.lastCommandTime < 3000)) {
-    console.log('명령 응답:', device.lastCommand, 'to', req.params.deviceId);
+    console.log('[명령 응답]', device.lastCommand, 'to', req.params.deviceId);
     res.json({ command: device.lastCommand });
   } else {
     device.lastCommand = null;
