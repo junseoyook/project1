@@ -57,15 +57,13 @@ router.get('/command/:deviceId', (req, res) => {
   const device = deviceController.getDevice(req.params.deviceId);
   if (!device) return res.json({ command: null });
 
-  let command = null;
-  if (device.shouldOpen) {
-    command = "open";
-    device.shouldOpen = false;
-  } else if (device.shouldClose) {
-    command = "close";
-    device.shouldClose = false;
+  const now = Date.now();
+  if (device.lastCommand && (now - device.lastCommandTime < 3000)) {
+    res.json({ command: device.lastCommand });
+  } else {
+    device.lastCommand = null;
+    res.json({ command: null });
   }
-  res.json({ command });
 });
 
 // 토큰 유효성 검증 (임시: 항상 성공)
