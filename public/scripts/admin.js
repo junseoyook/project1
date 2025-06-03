@@ -6,7 +6,6 @@ const API_KEY = 'your-secret-api-key'; // Railway에 설정한 것과 동일한 
 document.addEventListener('DOMContentLoaded', () => {
     const tokenForm = document.getElementById('tokenForm');
     const resultMessage = document.getElementById('resultMessage');
-    console.log('API Key:', API_KEY); // API 키 확인용 로그
 
     if (tokenForm) {
         tokenForm.addEventListener('submit', generateToken);
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         
         const phoneNumber = document.getElementById('phoneNumber').value;
-        console.log('전화번호 입력값:', phoneNumber);
         
         if (!phoneNumber) {
             showError('전화번호를 입력해주세요.');

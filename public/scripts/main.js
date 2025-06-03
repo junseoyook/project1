@@ -62,7 +62,7 @@ function showPage(pageId) {
     // # 제거
     pageId = pageId.replace('#', '');
     
-    console.log('Switching to page:', pageId); // 디버깅용 로그
+    // console.log('Switching to page:', pageId); // 디버깅용 로그 제거
     
     // 모든 페이지 숨기기
     document.querySelectorAll('.page').forEach(page => {
@@ -78,9 +78,9 @@ function showPage(pageId) {
     const selectedPage = document.getElementById(pageId);
     if (selectedPage) {
         selectedPage.style.display = 'block';
-        console.log('Page displayed:', pageId); // 디버깅용 로그
+        // console.log('Page displayed:', pageId); // 디버깅용 로그 제거
     } else {
-        console.warn('Page not found:', pageId); // 디버깅용 로그
+        // console.warn('Page not found:', pageId); // 디버깅용 로그 제거
     }
     
     // 해당 네비게이션 링크 활성화
@@ -92,20 +92,20 @@ function showPage(pageId) {
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded'); // 디버깅용 로그
+    // console.log('DOM Content Loaded'); // 디버깅용 로그 제거
     
     // 네비게이션 링크에 이벤트 리스너 추가
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const href = e.currentTarget.getAttribute('href');
-            console.log('Navigation clicked:', href); // 디버깅용 로그
+            // console.log('Navigation clicked:', href); // 디버깅용 로그 제거
             showPage(href);
         });
     });
 
     // URL의 해시가 있으면 해당 페이지를, 없으면 대시보드를 표시
     const hash = window.location.hash || '#dashboard';
-    console.log('Initial hash:', hash); // 디버깅용 로그
+    // console.log('Initial hash:', hash); // 디버깅용 로그 제거
     showPage(hash);
 }); 
