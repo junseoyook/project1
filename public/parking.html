@@ -220,11 +220,17 @@
             let success = false;
             for (let i = 0; i < 3; i++) {
                 try {
-                    const response = await fetch('/api/control/ESP32_001', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ command })
-                    });
+                    const response = await fetch(
+                        command === 'open' ? '/api/parking/open' : '/api/parking/close',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-device-id': 'ESP32_001',
+                                'x-device-secret': 'esp32-secret-key'
+                            }
+                        }
+                    );
                     const data = await response.json();
                     if (response.ok && data.success) {
                         success = true;
